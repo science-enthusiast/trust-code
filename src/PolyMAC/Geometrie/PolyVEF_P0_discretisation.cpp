@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2024, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -26,13 +26,12 @@
 #include <Champ_Uniforme.h>
 #include <DescStructure.h>
 #include <Champ_Inc.h>
-#include <Schema_Temps.h>
 #include <Schema_Temps_base.h>
 #include <Motcle.h>
 #include <Domaine_Cl_PolyMAC.h>
 #include <Domaine_Cl_dis.h>
 
-Implemente_instanciable(PolyVEF_P0_discretisation, "PolyVEF_P0", PolyVEF_P0P1NC_discretisation);
+Implemente_instanciable(PolyVEF_P0_discretisation, "PolyVEF_P0", PolyMAC_P0P1NC_discretisation);
 
 Entree& PolyVEF_P0_discretisation::readOn(Entree& s) { return s; }
 
@@ -144,9 +143,9 @@ void PolyVEF_P0_discretisation::residu( const Domaine_dis& z, const Champ_Inc& c
       Noms nom(1), unites(1);
       nom[0] = ch_name;
       unites[0] = "units_not_defined";
-      int nb_comp = ch_inco.valeurs().line_size()*dimension;
+      int nb_comp = ch_inco->valeurs().line_size()*dimension;
 
-      discretiser_champ(loc,z.valeur(), vectoriel, nom ,unites,nb_comp,ch_inco.temps(),champ);
+      discretiser_champ(loc,z.valeur(), vectoriel, nom ,unites,nb_comp,ch_inco->temps(),champ);
 
       Champ_Fonc_base& ch_fonc = ref_cast(Champ_Fonc_base,champ.valeur());
       DoubleTab& tab=ch_fonc.valeurs();
@@ -155,5 +154,5 @@ void PolyVEF_P0_discretisation::residu( const Domaine_dis& z, const Champ_Inc& c
     }
 
   else
-    PolyVEF_P0P1NC_discretisation::residu(z, ch_inco, champ);
+    PolyMAC_P0P1NC_discretisation::residu(z, ch_inco, champ);
 }

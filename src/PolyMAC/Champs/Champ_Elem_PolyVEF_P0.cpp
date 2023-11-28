@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2024, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -18,11 +18,11 @@
 #include <Domaine_PolyVEF_P0.h>
 #include <Domaine_Cl_PolyMAC.h>
 
-Implemente_instanciable(Champ_Elem_PolyVEF_P0,"Champ_Elem_PolyVEF_P0",Champ_Elem_PolyVEF_P0P1NC);
+Implemente_instanciable(Champ_Elem_PolyVEF_P0,"Champ_Elem_PolyVEF_P0",Champ_Elem_PolyMAC_P0P1NC);
 
 Sortie& Champ_Elem_PolyVEF_P0::printOn(Sortie& s) const { return s << que_suis_je() << " " << le_nom(); }
 
-Entree& Champ_Elem_PolyVEF_P0::readOn(Entree& s) { return Champ_Elem_PolyVEF_P0P1NC::readOn(s) ; }
+Entree& Champ_Elem_PolyVEF_P0::readOn(Entree& s) { return Champ_Elem_PolyMAC_P0P1NC::readOn(s) ; }
 
 const Domaine_PolyVEF_P0& Champ_Elem_PolyVEF_P0::domaine_PolyVEF_P0() const
 {
@@ -59,8 +59,8 @@ void Champ_Elem_PolyVEF_P0::init_grad(int full_stencil) const
   if (fgrad_d.size()) return;
   const IntTab& f_cl = fcl();
   const Domaine_PolyVEF_P0& domaine = ref_cast(Domaine_PolyVEF_P0, le_dom_VF.valeur());
-  const Conds_lim& cls = domaine_Cl_dis().les_conditions_limites(); // CAL du champ à dériver
-  domaine.fgrad(1, 0, 0, cls, f_cl, NULL, NULL, 1, full_stencil, fgrad_d, fgrad_e, fgrad_w);
+  const Conds_lim& cls = domaine_Cl_dis()->les_conditions_limites(); // CAL du champ à dériver
+  domaine.fgrad(1, 0, 0, cls, f_cl, nullptr, nullptr, 1, full_stencil, fgrad_d, fgrad_e, fgrad_w);
 }
 
 void Champ_Elem_PolyVEF_P0::calc_grad(int full_stencil) const
@@ -68,8 +68,8 @@ void Champ_Elem_PolyVEF_P0::calc_grad(int full_stencil) const
   if (grad_a_jour) return;
   const IntTab& f_cl = fcl();
   const Domaine_PolyVEF_P0& domaine = ref_cast(Domaine_PolyVEF_P0, le_dom_VF.valeur());
-  const Conds_lim& cls = domaine_Cl_dis().les_conditions_limites(); // CAL du champ à dériver
-  domaine.fgrad(1, 0, 0, cls, f_cl, NULL, NULL, 1, full_stencil, fgrad_d, fgrad_e, fgrad_w);
+  const Conds_lim& cls = domaine_Cl_dis()->les_conditions_limites(); // CAL du champ à dériver
+  domaine.fgrad(1, 0, 0, cls, f_cl, nullptr, nullptr, 1, full_stencil, fgrad_d, fgrad_e, fgrad_w);
   grad_a_jour = 1;
   tps_last_calc_grad_ = temps();
 }

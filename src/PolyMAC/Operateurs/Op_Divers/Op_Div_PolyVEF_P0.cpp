@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2024, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -63,13 +63,12 @@ void Op_Div_PolyVEF_P0::dimensionner_blocs(matrices_t matrices, const tabs_t& se
 {
   const Domaine_PolyVEF_P0& dom = le_dom_PolyVEF_P0.valeur();
   const Champ_Face_PolyVEF_P0& ch = ref_cast(Champ_Face_PolyVEF_P0, equation().inconnue().valeur());
-  const DoubleTab& inco = ch.valeurs(), &press = ref_cast(Navier_Stokes_std, equation()).pression().valeurs();
+  const DoubleTab& inco = ch.valeurs(), &press = ref_cast(Navier_Stokes_std, equation()).pression()->valeurs();
   const IntTab& f_e = dom.face_voisins();
   int i, e, f, ne_tot = dom.nb_elem_tot(), d, D = dimension, n, N = inco.line_size() / D;
 
-  Matrice_Morse *matv = matrices.count("vitesse") ? matrices["vitesse"] : NULL, *matp = matrices.count("pression") ? matrices["pression"] : NULL, matv2, matp2;
+  Matrice_Morse *matv = matrices.count("vitesse") ? matrices["vitesse"] : nullptr, *matp = matrices.count("pression") ? matrices["pression"] : nullptr, matv2, matp2;
   IntTrav sten_v(0,2), sten_p(0, 2); //stencil des deux matrices
-  sten_v.set_smart_resize(1), sten_p.set_smart_resize(1);
 
   for (f = 0; f < dom.nb_faces(); f++) /* sten_v : divergence "classique" */
     {
@@ -98,7 +97,7 @@ void Op_Div_PolyVEF_P0::ajouter_blocs_ext(const DoubleTab& vit, matrices_t matri
   const IntTab& f_e = dom.face_voisins(), &fcl = ch.fcl();
   const DoubleVect& pf = equation().milieu().porosite_face();
   int i, e, f, ne_tot = dom.nb_elem_tot(), d, D = dimension, n, N = vit.line_size() / D, has_P_ref = 0, has_fb = secmem.dimension_tot(0) > ne_tot;
-  Matrice_Morse *matv = matrices.count("vitesse") ? matrices["vitesse"] : NULL, *matp = matrices.count("pression") ? matrices["pression"] : NULL, matv2, matp2;
+  Matrice_Morse *matv = matrices.count("vitesse") ? matrices["vitesse"] : nullptr, *matp = matrices.count("pression") ? matrices["pression"] : nullptr, matv2, matp2;
 
   for (i = 0; i < cls.size(); i++)
     if (sub_type(Neumann_sortie_libre,cls[i].valeur())) has_P_ref = 1;
@@ -139,7 +138,7 @@ void Op_Div_PolyVEF_P0::ajouter_blocs_ext(const DoubleTab& vit, matrices_t matri
 
 DoubleTab& Op_Div_PolyVEF_P0::ajouter(const DoubleTab& vit, DoubleTab& div) const
 {
-  ajouter_blocs_ext(equation().inconnue().valeurs(), {}, div);
+  ajouter_blocs_ext(equation().inconnue()->valeurs(), {}, div);
   return div;
 }
 
@@ -170,7 +169,7 @@ int Op_Div_PolyVEF_P0::impr(Sortie& os) const
     {
       flux_bord=0;
       const Cond_lim& la_cl = le_dcl_PolyVEF_P0->les_conditions_limites(num_cl);
-      const Front_VF& frontiere_dis = ref_cast(Front_VF,la_cl.frontiere_dis());
+      const Front_VF& frontiere_dis = ref_cast(Front_VF,la_cl->frontiere_dis());
       int ndeb = frontiere_dis.num_premiere_face();
       int nfin = ndeb + frontiere_dis.nb_faces();
       for (int face=ndeb; face<nfin; face++)
@@ -201,9 +200,9 @@ int Op_Div_PolyVEF_P0::impr(Sortie& os) const
 
   for (int num_cl=0; num_cl<le_dom_PolyVEF_P0->nb_front_Cl(); num_cl++)
     {
-      const Frontiere_dis_base& la_fr = le_dcl_PolyVEF_P0->les_conditions_limites(num_cl).frontiere_dis();
+      const Frontiere_dis_base& la_fr = le_dcl_PolyVEF_P0->les_conditions_limites(num_cl)->frontiere_dis();
       const Cond_lim& la_cl = le_dcl_PolyVEF_P0->les_conditions_limites(num_cl);
-      const Front_VF& frontiere_dis = ref_cast(Front_VF,la_cl.frontiere_dis());
+      const Front_VF& frontiere_dis = ref_cast(Front_VF,la_cl->frontiere_dis());
       int ndeb = frontiere_dis.num_premiere_face();
       int nfin = ndeb + frontiere_dis.nb_faces();
       if (le_dom_PolyVEF_P0->domaine().bords_a_imprimer().contient(la_fr.le_nom()))

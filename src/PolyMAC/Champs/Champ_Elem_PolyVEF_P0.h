@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2024, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -16,7 +16,7 @@
 #ifndef Champ_Elem_PolyVEF_P0_included
 #define Champ_Elem_PolyVEF_P0_included
 
-#include <Champ_Elem_PolyVEF_P0P1NC.h>
+#include <Champ_Elem_PolyMAC_P0P1NC.h>
 #include <Operateur.h>
 
 class Domaine_PolyVEF_P0;
@@ -27,7 +27,7 @@ class Domaine_PolyVEF_P0;
  *  Degres de libertes : valeur aux elements + flux aux faces
  *
  */
-class Champ_Elem_PolyVEF_P0: public Champ_Elem_PolyVEF_P0P1NC
+class Champ_Elem_PolyVEF_P0: public Champ_Elem_PolyMAC_P0P1NC
 {
   Declare_instanciable(Champ_Elem_PolyVEF_P0);
 

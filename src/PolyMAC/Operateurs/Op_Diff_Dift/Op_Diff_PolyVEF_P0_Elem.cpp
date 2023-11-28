@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2024, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -13,9 +13,9 @@
 *
 *****************************************************************************/
 
-#include <Flux_interfacial_PolyVEF_P0P1NC.h>
+#include <Flux_interfacial_PolyMAC_P0P1NC.h>
 #include <Modele_turbulence_scal_base.h>
-#include <Echange_contact_PolyVEF_P0.h>
+#include <Echange_contact_PolyMAC_P0.h>
 #include <Op_Diff_PolyVEF_P0_Elem.h>
 #include <Echange_externe_impose.h>
 #include <Champ_Elem_PolyVEF_P0.h>
@@ -132,8 +132,8 @@ void Op_Diff_PolyVEF_P0_Elem::init_op_ext() const
     }
 
   /* construction de som_ext_{d, e, f} */
-  som_ext.set_smart_resize(1), som_ext_d.resize(0, 2), som_ext_d.set_smart_resize(1), som_ext_d.append_line(0, 0);
-  som_ext_pe.resize(0, 2), som_ext_pf.resize(0, 4), som_ext_pe.set_smart_resize(1), som_ext_pf.set_smart_resize(1);
+  som_ext_d.resize(0, 2), som_ext_d.append_line(0, 0);
+  som_ext_pe.resize(0, 2), som_ext_pf.resize(0, 4);
   std::set<std::array<int, 2>> s_pe; // (pb, el)
   std::set<std::array<int, 4>> s_pf; // (pb1, f1, pb2, f2)
   std::vector<std::reference_wrapper<const Domaine_PolyVEF_P0>> domaines;
@@ -201,12 +201,12 @@ double Op_Diff_PolyVEF_P0_Elem::calculer_dt_stab() const
   const Champ_Elem_PolyVEF_P0& 	ch	= ref_cast(Champ_Elem_PolyVEF_P0, equation().inconnue().valeur());
   const IntTab& e_f = domaine.elem_faces(), &fcl = ch.fcl();
   const DoubleTab& nf = domaine.face_normales(),
-                   *alp = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().inconnue().passe() : (has_champ_masse_volumique() ? &get_champ_masse_volumique().valeurs() : NULL),
+                   *alp = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().inconnue()->passe() : (has_champ_masse_volumique() ? &get_champ_masse_volumique().valeurs() : nullptr),
                     &diffu = diffusivite_pour_pas_de_temps().valeurs(), &lambda = diffusivite().valeurs();
   const DoubleVect& pe = equation().milieu().porosite_elem(), &vf = domaine.volumes_entrelaces(), &ve = domaine.volumes();
   update_nu();
 
-  int i, e, f, n, N = equation().inconnue().valeurs().dimension(1), cD = diffu.dimension(0) == 1, cL = lambda.dimension(0) == 1;
+  int i, e, f, n, N = equation().inconnue()->valeurs().dimension(1), cD = diffu.dimension(0) == 1, cL = lambda.dimension(0) == 1;
   double dt = 1e10;
   DoubleTrav flux(N);
   for (e = 0; e < domaine.nb_elem(); e++)
@@ -242,7 +242,7 @@ void Op_Diff_PolyVEF_P0_Elem::dimensionner_blocs(matrices_t matrices, const tabs
   std::vector<int> N(op_ext.size()); //nombre de composantes par probleme de op_ext
   std::vector<IntTrav> stencil(op_ext.size()); //stencils par matrice
   for (i = 0; i < (int) op_ext.size(); i++)
-    stencil[i].resize(0, 2), stencil[i].set_smart_resize(1), N[i] = op_ext[i]->equation().inconnue().valeurs().line_size();
+    stencil[i].resize(0, 2), N[i] = op_ext[i]->equation().inconnue()->valeurs().line_size();
 
   IntTrav tpfa(0, N[0]); //pour suivre quels flux sont a deux points
   domaine.creer_tableau_faces(tpfa), tpfa = 1;
@@ -306,7 +306,7 @@ void Op_Diff_PolyVEF_P0_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secm
       f_e.push_back(std::ref(domaine[i].get().face_voisins())), e_f.push_back(std::ref(domaine[i].get().elem_faces())), f_s.push_back(std::ref(domaine[i].get().face_sommets()));
       fs.push_back(std::ref(domaine[i].get().face_surfaces())), nf.push_back(std::ref(domaine[i].get().face_normales()));
       xp.push_back(std::ref(domaine[i].get().xp())), xv.push_back(std::ref(domaine[i].get().xv())), xs.push_back(std::ref(domaine[i].get().domaine().coord_sommets()));
-      cls.push_back(std::ref(op_ext[i]->equation().domaine_Cl_dis().les_conditions_limites()));
+      cls.push_back(std::ref(op_ext[i]->equation().domaine_Cl_dis()->les_conditions_limites()));
       diffu.push_back(ref_cast(Op_Diff_PolyVEF_P0_Elem, *op_ext[i]).nu());
       const Champ_Inc& ch_inc = op_ext[i]->has_champ_inco() ? op_ext[i]->mon_inconnue() : op_ext[i]->equation().inconnue();
       const Champ_Elem_PolyVEF_P0& ch = ref_cast(Champ_Elem_PolyVEF_P0, ch_inc.valeur());
@@ -315,8 +315,8 @@ void Op_Diff_PolyVEF_P0_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secm
     }
   const Domaine_PolyVEF_P0& domaine0 = domaine[0];
   DoubleTab *pqpi =
-    equation().sources().size() && sub_type(Flux_interfacial_PolyVEF_P0P1NC, equation().sources().dernier().valeur()) ?
-    &ref_cast(Flux_interfacial_PolyVEF_P0P1NC, equation().sources().dernier().valeur()).qpi() : nullptr;
+    equation().sources().size() && sub_type(Flux_interfacial_PolyMAC_P0P1NC, equation().sources().dernier().valeur()) ?
+    &ref_cast(Flux_interfacial_PolyMAC_P0P1NC, equation().sources().dernier().valeur()).qpi() : nullptr;
   d_nuc_ = 0; //remise a zero du diametre de nucleation
 
   /* avec phif : flux hors Echange_contact -> mat[0] seulement */
@@ -365,10 +365,6 @@ void Op_Diff_PolyVEF_P0_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secm
   //i_eq_{flux,cont}(i, n) -> n-ieme equation de flux/de continuite a la face i de s_pf
   //i_eq_pbm(i_efs(i, j, n)) -> n-ieme equation "flux = correlation" a la face j de l'elem i de s_pe (seulement si Pb_Multiphase)
   DoubleTrav A, B, mA, mB, Ff, Fec, Qf, Qec, Tefs, C, X, Y, W(1), S, x_fs;
-  i_efs.set_smart_resize(1), i_e.set_smart_resize(1), i_eq_flux.set_smart_resize(1), i_eq_cont.set_smart_resize(1), i_eq_pbm.set_smart_resize(1);
-  A.set_smart_resize(1), B.set_smart_resize(1), Ff.set_smart_resize(1), Fec.set_smart_resize(1), C.set_smart_resize(1), X.set_smart_resize(1);
-  Y.set_smart_resize(1), piv.set_smart_resize(1), W.set_smart_resize(1), x_fs.set_smart_resize(1), Tefs.set_smart_resize(1), S.set_smart_resize(1);
-  mA.set_smart_resize(1), mB.set_smart_resize(1), Qf.set_smart_resize(1), Qec.set_smart_resize(1);
 
   // Et pour les methodes span de la classe Saturation pour le flux parietal
   std::vector<DoubleTrav> Ts_tab(n_ext), Sigma_tab(n_ext), Lvap_tab(n_ext);
@@ -637,9 +633,9 @@ void Op_Diff_PolyVEF_P0_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secm
                             //equations sur les correlations
                             const Pb_Multiphase& pbm = ref_cast(Pb_Multiphase, op_ext[p]->equation().probleme());
                             const Flux_parietal_base& corr = ref_cast(Flux_parietal_base, pbm.get_correlation("Flux_parietal").valeur());
-                            const DoubleTab& alpha = pbm.equation_masse().inconnue().passe(), &dh = pbm.milieu().diametre_hydraulique_elem(), &press = ref_cast(QDM_Multiphase, pbm.equation_qdm()).pression().passe(), &vit =
-                                                                                                      pbm.equation_qdm().inconnue().passe(), &lambda = pbm.milieu().conductivite().passe(), &mu = ref_cast(Fluide_base, pbm.milieu()).viscosite_dynamique().passe(), &rho =
-                                                                                                            pbm.milieu().masse_volumique().passe(), &Cp = pbm.milieu().capacite_calorifique().passe();
+                            const DoubleTab& alpha = pbm.equation_masse().inconnue()->passe(), &dh = pbm.milieu().diametre_hydraulique_elem(), &press = ref_cast(QDM_Multiphase, pbm.equation_qdm()).pression()->passe(), &vit =
+                                                                                                       pbm.equation_qdm().inconnue()->passe(), &lambda = pbm.milieu().conductivite()->passe(), &mu = ref_cast(Fluide_base, pbm.milieu()).viscosite_dynamique()->passe(), &rho =
+                                                                                                             pbm.milieu().masse_volumique()->passe(), &Cp = pbm.milieu().capacite_calorifique()->passe();
                             Flux_parietal_base::input_t in;
                             Flux_parietal_base::output_t out;
                             DoubleTrav Tf(N[p]), qpk(N[p]), dTf_qpk(N[p], N[p]), dTp_qpk(N[p]), qpi(N[p], N[p]), dTf_qpi(N[p], N[p], N[p]), dTp_qpi(N[p], N[p]), nv(N[p]), d_nuc(N[p]);

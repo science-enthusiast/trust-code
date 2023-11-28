@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2024, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -35,7 +35,7 @@
 #include <array>
 #include <cmath>
 
-Implemente_instanciable(Champ_Face_PolyVEF_P0,"Champ_Face_PolyVEF_P0",Champ_Face_PolyVEF_P0P1NC) ;
+Implemente_instanciable(Champ_Face_PolyVEF_P0,"Champ_Face_PolyVEF_P0",Champ_Face_PolyMAC_P0P1NC) ;
 
 Sortie& Champ_Face_PolyVEF_P0::printOn(Sortie& os) const { return os << que_suis_je() << " " << le_nom(); }
 
@@ -84,7 +84,7 @@ DoubleTab& Champ_Face_PolyVEF_P0::valeur_aux_elems(const DoubleTab& positions, c
 {
   const Domaine_PolyVEF_P0& dom = domaine_PolyVEF_P0();
   const DoubleTab& src = valeurs(), &nf = dom.face_normales(), &xp = dom.xp(), &xv = dom.xv(), &vf_dir = dom.volumes_entrelaces_dir();
-  const DoubleVect& ve = dom.volumes(), *pe = mon_equation_non_nul() ? &equation().milieu().porosite_elem() : NULL, *pf = mon_equation_non_nul() ? &equation().milieu().porosite_face() : NULL;
+  const DoubleVect& ve = dom.volumes(), *pe = mon_equation_non_nul() ? &equation().milieu().porosite_elem() : nullptr, *pf = mon_equation_non_nul() ? &equation().milieu().porosite_face() : nullptr;
   const IntTab& e_f = dom.elem_faces(), &f_e = dom.face_voisins();
   int i, j, e, f, d, db, D = dimension, n, N = valeurs().line_size() / D;
 
@@ -110,7 +110,7 @@ DoubleVect& Champ_Face_PolyVEF_P0::valeur_aux_elems_compo(const DoubleTab& posit
 {
   const Domaine_PolyVEF_P0& dom = domaine_PolyVEF_P0();
   const DoubleTab& src = valeurs(), &nf = dom.face_normales(), &xp = dom.xp(), &xv = dom.xv(), &vf_dir = dom.volumes_entrelaces_dir();
-  const DoubleVect& ve = dom.volumes(), *pe = mon_equation_non_nul() ? &equation().milieu().porosite_elem() : NULL, *pf = mon_equation_non_nul() ? &equation().milieu().porosite_face() : NULL;
+  const DoubleVect& ve = dom.volumes(), *pe = mon_equation_non_nul() ? &equation().milieu().porosite_elem() : nullptr, *pf = mon_equation_non_nul() ? &equation().milieu().porosite_face() : nullptr;
   const IntTab& e_f = dom.elem_faces(), &f_e = dom.face_voisins();
   int i, j, e, f, db, D = dimension, N = src.line_size() / D, d = ncomp / N, n = ncomp % N;
 
@@ -162,7 +162,6 @@ void Champ_Face_PolyVEF_P0::init_vf2() const
 
   DoubleTrav vf2, vf2i, A, B, P, W(1), x_cg(D);
   IntTrav pvt;
-  vf2.set_smart_resize(1), A.set_smart_resize(1), B.set_smart_resize(1), P.set_smart_resize(1), W.set_smart_resize(1), pvt.set_smart_resize(1);
 
   /* connectivite arete-face */
   std::map<std::array<int, 2>, std::vector<int>> a_f;
@@ -170,8 +169,7 @@ void Champ_Face_PolyVEF_P0::init_vf2() const
     for (i = 0; i < f_s.dimension(1) && (s = f_s(f, i)) >= 0; i++)
       sb = D < 3 ? -1 : f_s(f, i + 1 < f_s.dimension(1) && f_s(f, i + 1) >= 0 ? i + 1 : 0), a_f[ {{ std::min(s, sb), std::max(s, sb)}}].push_back(f);
 
-  vf2d.resize(1, 2), vf2d.set_smart_resize(1), vf2j.set_smart_resize(1), vf2bj.resize(0, 2), vf2bj.set_smart_resize(1);
-  vf2c.resize(0, D), vf2c.set_smart_resize(1), vf2bc.resize(0, D), vf2bc.set_smart_resize(1);
+  vf2d.resize(1, 2), vf2bj.resize(0, 2), vf2c.resize(0, D), vf2bc.resize(0, D);
   std::map<std::array<int, 2>, int> v_i; // v_i[{f, -1 (interne) ou composante }] = indice
   std::vector<std::array<int, 2>> i_v; // v_i[i_v[f]] = f
   for (f = 0; f < dom.nb_faces(); f++, v_i.clear(), i_v.clear(), vf2d.append_line(vf2c.dimension(0), vf2bc.dimension(0)))
@@ -255,7 +253,7 @@ void Champ_Face_PolyVEF_P0::update_vf2(DoubleTab& val, int incr) const
 {
   if (!Option_PolyVEF_P0::interp_vf2 || 1) return;
   const Domaine_PolyVEF_P0& dom = domaine_PolyVEF_P0();
-  const Conds_lim& cls = domaine_Cl_dis().les_conditions_limites();
+  const Conds_lim& cls = domaine_Cl_dis()->les_conditions_limites();
   const DoubleTab& nf = dom.face_normales();
   const DoubleVect& fs = dom.face_surfaces();//, &pf = equation().milieu().porosite_face();
   int i, f, fb, d, db, D = dimension, N = val.line_size() / D, n;
