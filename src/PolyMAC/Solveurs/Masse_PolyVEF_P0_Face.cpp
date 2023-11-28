@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2024, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -33,7 +33,7 @@
 #include <TRUSTTab.h>
 #include <Piso.h>
 
-Implemente_instanciable(Masse_PolyVEF_P0_Face, "Masse_PolyVEF_P0_Face", Masse_PolyVEF_P0P1NC_Face);
+Implemente_instanciable(Masse_PolyVEF_P0_Face, "Masse_PolyVEF_P0_Face", Masse_PolyMAC_P0P1NC_Face);
 
 Sortie& Masse_PolyVEF_P0_Face::printOn(Sortie& s) const { return s << que_suis_je() << " " << le_nom(); }
 
@@ -53,8 +53,8 @@ DoubleTab& Masse_PolyVEF_P0_Face::appliquer_impl(DoubleTab& sm) const
   const Domaine_PolyVEF_P0 dom =  ref_cast(Domaine_PolyVEF_P0, le_dom_PolyMAC.valeur());
   const IntTab& f_e = dom.face_voisins();
   const DoubleVect& pf = equation().milieu().porosite_face(), &vf = dom.volumes_entrelaces();
-  int i, e, f, d, D = dimension, n, N = equation().inconnue().valeurs().line_size() / D;
-  const DoubleTab *a_r = sub_type(QDM_Multiphase, equation()) ? &ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().champ_conserve().passe() : NULL, &vfd = dom.volumes_entrelaces_dir();
+  int i, e, f, d, D = dimension, n, N = equation().inconnue()->valeurs().line_size() / D;
+  const DoubleTab *a_r = sub_type(QDM_Multiphase, equation()) ? &ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().champ_conserve().passe() : nullptr, &vfd = dom.volumes_entrelaces_dir();
   double fac;
 
   //vitesses aux faces
@@ -77,14 +77,13 @@ void Masse_PolyVEF_P0_Face::dimensionner_blocs(matrices_t matrices, const tabs_t
   if (!matrices.count(nom_inc)) return; //rien a faire
   Matrice_Morse& mat = *matrices.at(nom_inc), mat2;
   const Domaine_PolyVEF_P0 dom =  ref_cast(Domaine_PolyVEF_P0, le_dom_PolyMAC.valeur());
-  const DoubleTab& inco = equation().inconnue().valeurs();
-  const Pb_Multiphase *pbm = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()) : NULL;
-  const Masse_ajoutee_base *corr = pbm && pbm->has_correlation("masse_ajoutee") ? &ref_cast(Masse_ajoutee_base, pbm->get_correlation("masse_ajoutee").valeur()) : NULL;
+  const DoubleTab& inco = equation().inconnue()->valeurs();
+  const Pb_Multiphase *pbm = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()) : nullptr;
+  const Masse_ajoutee_base *corr = pbm && pbm->has_correlation("masse_ajoutee") ? &ref_cast(Masse_ajoutee_base, pbm->get_correlation("masse_ajoutee").valeur()) : nullptr;
   const IntTab& fcl = ref_cast(Champ_Face_PolyMAC, equation().inconnue().valeur()).fcl();
   int i, j, f, d, D = dimension, n, N = inco.line_size() / D;
 
   IntTrav sten(0, 2);
-  sten.set_smart_resize(1);
   for (f = 0, i = 0; f < dom.nb_faces(); f++)
     for (d = 0; d < D; d++)
       for (n = 0; n < N; n++, i++)
@@ -103,16 +102,16 @@ void Masse_PolyVEF_P0_Face::dimensionner_blocs(matrices_t matrices, const tabs_t
 // XXX : a voir si on peut utiliser Solveur_Masse_Face_proto::ajouter_blocs_proto ...
 void Masse_PolyVEF_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, double dt, const tabs_t& semi_impl, int resoudre_en_increments) const
 {
-  const DoubleTab& inco = equation().inconnue().valeurs(), &passe = equation().inconnue().passe();
+  const DoubleTab& inco = equation().inconnue()->valeurs(), &passe = equation().inconnue()->passe();
   Matrice_Morse *mat = matrices[equation().inconnue().le_nom().getString()]; //facultatif
   const Domaine_PolyVEF_P0 dom =  ref_cast(Domaine_PolyVEF_P0, le_dom_PolyMAC.valeur());
   const IntTab& f_e = dom.face_voisins(), &fcl = ref_cast(Champ_Face_PolyMAC, equation().inconnue().valeur()).fcl();
   const DoubleVect& pf = equation().milieu().porosite_face(), &vf = dom.volumes_entrelaces(), &fs = dom.face_surfaces();
-  const Pb_Multiphase *pbm = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()) : NULL;
-  const DoubleTab& rho = equation().milieu().masse_volumique().passe(), &nf = dom.face_normales(),
-                   *alpha = pbm ? &pbm->equation_masse().inconnue().passe() : NULL, *a_r = pbm ? &pbm->equation_masse().champ_conserve().passe() : NULL, &vfd = dom.volumes_entrelaces_dir();
-  const Masse_ajoutee_base *corr = pbm && pbm->has_correlation("masse_ajoutee") ? &ref_cast(Masse_ajoutee_base, pbm->get_correlation("masse_ajoutee").valeur()) : NULL;
-  const Conds_lim& cls = equation().inconnue()->domaine_Cl_dis().les_conditions_limites();
+  const Pb_Multiphase *pbm = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()) : nullptr;
+  const DoubleTab& rho = equation().milieu().masse_volumique()->passe(), &nf = dom.face_normales(),
+                   *alpha = pbm ? &pbm->equation_masse().inconnue()->passe() : nullptr, *a_r = pbm ? &pbm->equation_masse().champ_conserve().passe() : nullptr, &vfd = dom.volumes_entrelaces_dir();
+  const Masse_ajoutee_base *corr = pbm && pbm->has_correlation("masse_ajoutee") ? &ref_cast(Masse_ajoutee_base, pbm->get_correlation("masse_ajoutee").valeur()) : nullptr;
+  const Conds_lim& cls = equation().inconnue()->domaine_Cl_dis()->les_conditions_limites();
   int i, e, f, m, d, db, D = dimension, n, N = inco.line_size() / D, cR = rho.dimension_tot(0) == 1;
 
   /* faces : si CLs, pas de produit par alpha * rho en multiphase */
@@ -151,7 +150,7 @@ void Masse_PolyVEF_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem
             else if (fcl(f, 0) == 2 && sub_type(Frottement_impose_base, cls[fcl(f, 1)].valeur())) //Navier
               {
                 // Pour l'instant on fait un truc sale : on appelle un frottement global comme un frottement externe pour avoir une seule classe paroi_frottante
-                const Frottement_global_impose *cl = sub_type(Frottement_global_impose, cls[fcl(f, 1)].valeur()) ? &ref_cast(Frottement_global_impose, cls[fcl(f, 1)].valeur()) : NULL;
+                const Frottement_global_impose *cl = sub_type(Frottement_global_impose, cls[fcl(f, 1)].valeur()) ? &ref_cast(Frottement_global_impose, cls[fcl(f, 1)].valeur()) : nullptr;
                 if (!cl)
                   Process::exit("Masse_PolyVEF_P0_Face: only Frottement_global_impose is supported!");
                 secmem(f, N * d + n) -= fs(f) * cl->coefficient_frottement(fcl(f, 2), n) * inco(f, N * d + n);

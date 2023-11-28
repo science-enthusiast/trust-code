@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2024, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -49,7 +49,6 @@ void Op_Evanescence_Homogene_PolyVEF_P0_Face::dimensionner_blocs(matrices_t matr
     if (n_m.second->nb_colonnes())
       {
         IntTrav sten(0, 2);
-        sten.set_smart_resize(1);
 
         std::set<int> idx;
         Matrice_Morse& mat = *n_m.second, mat2;
@@ -77,11 +76,11 @@ void Op_Evanescence_Homogene_PolyVEF_P0_Face::ajouter_blocs(matrices_t matrices,
   const Champ_Face_base& ch = ref_cast(Champ_Face_base, equation().inconnue().valeur());
   const Domaine_VF& domaine = ref_cast(Domaine_VF, equation().domaine_dis().valeur());
   const IntTab& f_e = domaine.face_voisins();
-  const DoubleTab& inco = ch.valeurs(), &vfd = domaine.volumes_entrelaces_dir(), &alpha = ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().inconnue().passe(),
-                   &rho = equation().milieu().masse_volumique().passe(),
-                    &temp  = ref_cast(Pb_Multiphase, equation().probleme()).equation_energie().inconnue().passe(),
-                     &press = ref_cast(QDM_Multiphase, ref_cast(Pb_Multiphase, equation().probleme()).equation_qdm()).pression().passe(),
-                      &mu = ref_cast(Milieu_composite, equation().milieu()).viscosite_dynamique().passe(),
+  const DoubleTab& inco = ch.valeurs(), &vfd = domaine.volumes_entrelaces_dir(), &alpha = ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().inconnue()->passe(),
+                   &rho = equation().milieu().masse_volumique()->passe(),
+                    &temp  = ref_cast(Pb_Multiphase, equation().probleme()).equation_energie().inconnue()->passe(),
+                     &press = ref_cast(QDM_Multiphase, ref_cast(Pb_Multiphase, equation().probleme()).equation_qdm()).pression()->passe(),
+                      &mu = ref_cast(Milieu_composite, equation().milieu()).viscosite_dynamique()->passe(),
                        *d_bulles = (equation().probleme().has_champ("diametre_bulles")) ? &equation().probleme().get_champ("diametre_bulles").valeurs() : nullptr,
                         *k_turb = (equation().probleme().has_champ("k")) ? &equation().probleme().get_champ("k").passe() : nullptr,
                          *gravity = (equation().probleme().has_champ("gravite")) ? &equation().probleme().get_champ("gravite").valeurs() : nullptr ;

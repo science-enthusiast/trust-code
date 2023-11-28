@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2024, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -13,7 +13,7 @@
 *
 *****************************************************************************/
 
-#include <Echange_contact_PolyVEF_P0.h>
+#include <Echange_contact_PolyMAC_P0.h>
 #include <Frottement_externe_impose.h>
 #include <Linear_algebra_tools_impl.h>
 #include <Frottement_global_impose.h>
@@ -47,7 +47,6 @@
 #include <Scatter.h>
 #include <EChaine.h>
 #include <LireMED.h>
-#include <EcrMED.h>
 #include <unistd.h>
 #include <Lapack.h>
 #include <numeric>
@@ -59,7 +58,7 @@
 #include <set>
 #include <map>
 
-Implemente_instanciable(Domaine_PolyVEF_P0, "Domaine_PolyVEF_P0", Domaine_PolyVEF_P0P1NC);
+Implemente_instanciable(Domaine_PolyVEF_P0, "Domaine_PolyVEF_P0", Domaine_PolyMAC_P0P1NC);
 
 Sortie& Domaine_PolyVEF_P0::printOn(Sortie& os) const { return Domaine_Poly_base::printOn(os); }
 
@@ -67,7 +66,7 @@ Entree& Domaine_PolyVEF_P0::readOn(Entree& is) { return Domaine_Poly_base::readO
 
 void Domaine_PolyVEF_P0::discretiser()
 {
-  /* on saut le discretiser() de Domaine_PolyVEF_P0P1NC pour eviter d'initialiser les variables de PolyVEF_P0P1NC_V1 */
+  /* on saut le discretiser() de Domaine_PolyMAC_P0P1NC pour eviter d'initialiser les variables de PolyMAC_P0P1NC_V1 */
   Domaine_Poly_base::discretiser();
   /* comme on a le vecteur complet aux faces, les volumes entrelaces sont divises par D */
   volumes_entrelaces_ /= dimension, volumes_entrelaces_dir_ /= dimension;
@@ -86,7 +85,6 @@ void Domaine_PolyVEF_P0::init_stencils() const
   if (fsten_d.size()) return;
   const IntTab& f_s = face_sommets(), &f_e = face_voisins(), &e_s = domaine().les_elems();
   int i, e, f, s, ne_tot = nb_elem_tot(), ns_tot = domaine().nb_som_tot();
-  fsten_d.set_smart_resize(1), fsten_d.resize(1), fsten_eb.set_smart_resize(1);
 
   /* connectivite sommets -> elems / faces de bord */
   std::vector<std::set<int>> som_eb(ns_tot);
@@ -111,7 +109,7 @@ void Domaine_PolyVEF_P0::init_stencils() const
   CRIMP(fsten_d), CRIMP(fsten_eb);
 }
 
-//pour u.n champ T aux elements, interpole [n_f.grad T]_f (si nu = NULL) ou [n_f.nu.grad T]_f ou (grad p)_f (si is_p = 1)
+//pour u.n champ T aux elements, interpole [n_f.grad T]_f (si nu = nullptr) ou [n_f.nu.grad T]_f ou (grad p)_f (si is_p = 1)
 //en preservant exactement les champs verifiant [nu grad T]_e = cte.
 //Entrees : N             : nombre de composantes
 //          is_p          : 1 si on traite le champ de pression (inversion Neumann / Dirichlet)
@@ -138,7 +136,7 @@ void Domaine_PolyVEF_P0::fgrad(int N, int is_p, int vec, const Conds_lim& cls, c
   int i, i_s, j, k, l, e, f, s, sb, n_f, n_m, n_ef, n_e, n_eb, m, n, ne_tot = nb_elem_tot(), sgn, nw, infoo, d, db, D = dimension, rk, nl, nc, un = 1, il, ok, essai;
   unsigned long ll;
   double x, eps_g = 1e-6, eps = 1e-10, i3[3][3] = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 }}, fac[3], vol_s;
-  init_stencils(), phif_d.set_smart_resize(1), phif_e.set_smart_resize(1), phif_e.resize(0), vec ? phif_c.resize(fsten_eb.dimension(0), D, N) : phif_c.resize(fsten_eb.dimension(0), N), phif_c = 0;
+  init_stencils(), phif_e.resize(0), vec ? phif_c.resize(fsten_eb.dimension(0), D, N) : phif_c.resize(fsten_eb.dimension(0), N), phif_c = 0;
 
   std::vector<int> s_eb, s_f; //listes d'elements/bord, de faces autour du sommet
   std::vector<double> surf_fs, vol_es; //surfaces partielles des faces connectees au sommet (meme ordre que s_f)
@@ -147,8 +145,6 @@ void Domaine_PolyVEF_P0::fgrad(int N, int is_p, int vec, const Conds_lim& cls, c
   DoubleTrav M, B, X, Ff, Feb, Gf, Geb, Mf, Meb, W(1), x_fs, A, S; //systeme M.(grad u) = B dans chaque element, flux/gradient a la face {F,G}f.u_fs + {F,G}eb.u_eb, equations Mf.u_fs = Meb.u_eb
   IntTrav piv, ctr[3];
   for (i = 0; first_fgrad_ && i < 3; i++) domaine().creer_tableau_sommets(ctr[i]);
-  M.set_smart_resize(1), B.set_smart_resize(1), X.set_smart_resize(1), Ff.set_smart_resize(1), Feb.set_smart_resize(1), Gf.set_smart_resize(1), Geb.set_smart_resize(1);
-  Mf.set_smart_resize(1), Meb.set_smart_resize(1), W.set_smart_resize(1), x_fs.set_smart_resize(1), A.set_smart_resize(1), piv.set_smart_resize(1), S.set_smart_resize(1);
 
   /* contributions aux sommets : en evitant ceux de som_ext */
   for (i_s = 0; i_s <= (som_ext ? som_ext->size() : 0); i_s++)
@@ -241,7 +237,7 @@ void Domaine_PolyVEF_P0::fgrad(int N, int is_p, int vec, const Conds_lim& cls, c
                   for (j = 0; j < n_ef; j++)
                     {
                       k = se_f[i][j], f = s_f[k], sgn = e == f_e(f, 0) ? 1 : -1; //face et son indice
-                      const Cond_lim_base *cl = fcl(f, 0) ? &cls[fcl(f, 1)].valeur() : NULL; //si on est sur une CL, pointeur vers celle-ci
+                      const Cond_lim_base *cl = fcl(f, 0) ? &cls[fcl(f, 1)].valeur() : nullptr; //si on est sur une CL, pointeur vers celle-ci
                       int is_dir = cl && (is_p || sub_type(Dirichlet, *cl) || sub_type(Dirichlet_homogene, *cl)); //dans le cas de la pression, toutes les CL sont de Dirichlet
                       for (l = 0; l < n_ef; l++)
                         {

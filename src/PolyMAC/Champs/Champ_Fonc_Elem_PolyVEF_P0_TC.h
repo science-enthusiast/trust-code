@@ -13,23 +13,37 @@
 *
 *****************************************************************************/
 
-#ifndef PolyVEF_P0_discretisation_included
-#define PolyVEF_P0_discretisation_included
+#ifndef Champ_Fonc_Elem_PolyVEF_P0_TC_included
+#define Champ_Fonc_Elem_PolyVEF_P0_TC_included
 
-#include <PolyMAC_P0P1NC_discretisation.h>
+#include <Champ_Fonc_Elem_PolyMAC.h>
+#include <Champ_Face_PolyVEF_P0.h>
+#include <TRUST_Ref.h>
 
-class PolyVEF_P0_discretisation : public PolyMAC_P0P1NC_discretisation
+/*! @brief class Champ_Fonc_Elem_PolyVEF_P0_TC for the calculation of the shear rate (taux de cisaillement)
+ *
+ *    This field is a Champ_Fonc_Elem_PolyVEF_P0 with 1 value per element and per phase :
+ *
+ *       Champ_Fonc_Elem_PolyVEF_P0_TC::valeurs()(e, n) returns the value of phase n in element e
+ *       The shear rate is calculated using
+ *         shear rate = sqrt(2*Sij*Sij)
+ *         Sij = 1/2(grad(u)+t grad(u))
+ *
+ */
+
+class Champ_Fonc_Elem_PolyVEF_P0_TC: public Champ_Fonc_Elem_PolyMAC
 {
-  Declare_instanciable(PolyVEF_P0_discretisation);
-public :
-  void grad_u(const Domaine_dis& z,const Domaine_Cl_dis& zcl,const Champ_Inc& ch_vitesse,Champ_Fonc& ch) const override;
-  void taux_cisaillement(const Domaine_dis&, const Domaine_Cl_dis& ,const Champ_Inc&, Champ_Fonc&) const override;
-  void creer_champ_vorticite(const Schema_Temps_base& ,const Champ_Inc&, Champ_Fonc& ) const override;
-  void residu(const Domaine_dis& z, const Champ_Inc& ch_inco, Champ_Fonc& champ ) const override ;
+  Declare_instanciable(Champ_Fonc_Elem_PolyVEF_P0_TC);
+public:
+  void mettre_a_jour(double) override;
+  void me_calculer(double tps);
 
-  bool is_polymac_p0() const override { return true; }
-  bool is_polymac_p0p1nc() const override { return false; } // attention heritage !
-  bool is_polymac() const override { return false; } // attention heritage !
+  inline void associer_champ(const Champ_Face_PolyVEF_P0& ch) { champ_ = ch; }
+  inline virtual Champ_Face_PolyVEF_P0& champ_a_deriver() { return champ_.valeur(); }
+  inline virtual const Champ_Face_PolyVEF_P0& champ_a_deriver() const { return champ_.valeur(); }
+
+protected:
+  REF(Champ_Face_PolyVEF_P0) champ_;
 };
 
-#endif /* PolyVEF_P0_discretisation_included */
+#endif /* Champ_Fonc_Elem_PolyVEF_P0_TC_included */

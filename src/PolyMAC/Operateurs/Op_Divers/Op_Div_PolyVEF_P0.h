@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2024, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -51,7 +51,7 @@ public:
 
   void ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl = {}) const override
   {
-    return ajouter_blocs_ext(equation().inconnue().valeurs(), matrices, secmem, semi_impl);
+    return ajouter_blocs_ext(equation().inconnue()->valeurs(), matrices, secmem, semi_impl);
   }
   /* contrairement au cas usuel, ces methodes ne peuvent pas etre reimplementees a partir d'ajouter_blocs(),
      car elles sont souvent appelees avec un tableau inco arbitraire */

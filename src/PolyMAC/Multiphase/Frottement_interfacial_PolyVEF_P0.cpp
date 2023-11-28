@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2024, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -36,7 +36,6 @@ void Frottement_interfacial_PolyVEF_P0::dimensionner_blocs(matrices_t matrices, 
 
   /* stencil : diagonal par bloc pour les vitesses aux faces, puis chaque composante des vitesses aux elems */
   IntTrav stencil(0, 2);
-  stencil.set_smart_resize(1);
   int f, k, l, d, D = dimension, N = inco.line_size() / D;
   /* faces */
   for (f = 0; f < domaine.nb_faces(); f++)
@@ -59,11 +58,11 @@ void Frottement_interfacial_PolyVEF_P0::ajouter_blocs(matrices_t matrices, Doubl
   const IntTab& f_e = domaine.face_voisins();
   const DoubleVect& pf = equation().milieu().porosite_face(), &vf = domaine.volumes_entrelaces(), &dh_e = equation().milieu().diametre_hydraulique_elem();
   const DoubleTab& inco = ch.valeurs(), &pvit = ch.passe(), &vfd = domaine.volumes_entrelaces_dir(),
-                   &alpha = pbm.equation_masse().inconnue().passe(),
-                    &press = ref_cast(QDM_Multiphase, equation()).pression().passe(),
-                     &temp  = pbm.equation_energie().inconnue().passe(),
-                      &rho   = equation().milieu().masse_volumique().passe(),
-                       &mu    = ref_cast(Fluide_base, equation().milieu()).viscosite_dynamique().passe();
+                   &alpha = pbm.equation_masse().inconnue()->passe(),
+                    &press = ref_cast(QDM_Multiphase, equation()).pression()->passe(),
+                     &temp  = pbm.equation_energie().inconnue()->passe(),
+                      &rho   = equation().milieu().masse_volumique()->passe(),
+                       &mu    = ref_cast(Fluide_base, equation().milieu()).viscosite_dynamique()->passe();
   ConstDoubleTab_parts ppart(press);
   const Milieu_composite& milc = ref_cast(Milieu_composite, equation().milieu());
 
