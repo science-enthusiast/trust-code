@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2023, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -13,32 +13,24 @@
 *
 *****************************************************************************/
 
-#include <Source_Dispersion_bulles_base.h>
-#include <Dispersion_bulles_base.h>
-#include <Champ_Face_base.h>
-#include <Pb_Multiphase.h>
-#include <Matrix_tools.h>
-#include <Array_tools.h>
-#include <Domaine_VF.h>
+#include <Source_Generique_Face_PolyVEF_P0.h>
+#include <Domaine_PolyVEF_P0.h>
+#include <Equation_base.h>
+#include <Milieu_base.h>
 
-Implemente_base(Source_Dispersion_bulles_base, "Source_Dispersion_bulles_base", Sources_Multiphase_base);
-// XD Dispersion_bulles source_base Dispersion_bulles 1 Base class for source terms of bubble dispersion in momentum equation.
-// XD attr beta floattant beta 1 Mutliplying factor for the output of the bubble dispersion source term.
+Implemente_instanciable(Source_Generique_Face_PolyVEF_P0, "Source_Generique_Face_PolyVEF_P0", Source_Generique_Face_PolyMAC_P0P1NC);
 
-Sortie& Source_Dispersion_bulles_base::printOn(Sortie& os) const { return os; }
+Sortie& Source_Generique_Face_PolyVEF_P0::printOn(Sortie& os) const { return os << que_suis_je(); }
 
-Entree& Source_Dispersion_bulles_base::readOn(Entree& is)
+Entree& Source_Generique_Face_PolyVEF_P0::readOn(Entree& is) { return Source_Generique_base::readOn(is); }
+
+DoubleTab& Source_Generique_Face_PolyVEF_P0::ajouter(DoubleTab& resu) const
 {
-  Param param(que_suis_je());
-  param.ajouter("beta", &beta_);
-  param.lire_avec_accolades_depuis(is);
-
-  Pb_Multiphase *pbm = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()) : nullptr;
-
-  if (!pbm || pbm->nb_phases() == 1) Process::exit(que_suis_je() + " : not needed for single-phase flow!");
-
-  if (pbm->has_correlation("Dispersion_bulles")) correlation_ = pbm->get_correlation("Dispersion_bulles"); //correlation fournie par le bloc correlation
-  else Process::exit(que_suis_je() + " : the turbulent dispersion correlation must be defined in the correlation bloc.");
-
-  return is;
+  Champ espace_stockage;
+  const Champ_base& la_source = ch_source_->get_champ(espace_stockage); // Aux faces
+  const Domaine_PolyMAC& domaine = le_dom_PolyMAC.valeur();
+  const DoubleVect& pf = equation().milieu().porosite_face(), &vf = domaine.volumes_entrelaces();
+  for (int f = 0; f < domaine.nb_faces(); f++)
+    resu(f) += pf(f) * vf(f) * la_source.valeurs()(f);
+  return resu;
 }
