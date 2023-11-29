@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2023, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -13,32 +13,21 @@
 *
 *****************************************************************************/
 
-#include <Source_Dispersion_bulles_base.h>
-#include <Dispersion_bulles_base.h>
-#include <Champ_Face_base.h>
-#include <Pb_Multiphase.h>
-#include <Matrix_tools.h>
-#include <Array_tools.h>
-#include <Domaine_VF.h>
+#ifndef Terme_Boussinesq_PolyVEF_P0_Face_included
+#define Terme_Boussinesq_PolyVEF_P0_Face_included
 
-Implemente_base(Source_Dispersion_bulles_base, "Source_Dispersion_bulles_base", Sources_Multiphase_base);
-// XD Dispersion_bulles source_base Dispersion_bulles 1 Base class for source terms of bubble dispersion in momentum equation.
-// XD attr beta floattant beta 1 Mutliplying factor for the output of the bubble dispersion source term.
+#include <Terme_Boussinesq_PolyMAC_Face.h>
 
-Sortie& Source_Dispersion_bulles_base::printOn(Sortie& os) const { return os; }
-
-Entree& Source_Dispersion_bulles_base::readOn(Entree& is)
+/*! @brief class Terme_Boussinesq_scalaire_PolyVEF_P0_Face
+ *
+ *  Terme Source de Boussinesq pour une dicretisation PolyVEF_P0
+ *
+ */
+class Terme_Boussinesq_PolyVEF_P0_Face : public Terme_Boussinesq_PolyMAC_Face
 {
-  Param param(que_suis_je());
-  param.ajouter("beta", &beta_);
-  param.lire_avec_accolades_depuis(is);
+  Declare_instanciable(Terme_Boussinesq_PolyVEF_P0_Face);
+public:
+  void ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl = {}) const override;
+};
 
-  Pb_Multiphase *pbm = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()) : nullptr;
-
-  if (!pbm || pbm->nb_phases() == 1) Process::exit(que_suis_je() + " : not needed for single-phase flow!");
-
-  if (pbm->has_correlation("Dispersion_bulles")) correlation_ = pbm->get_correlation("Dispersion_bulles"); //correlation fournie par le bloc correlation
-  else Process::exit(que_suis_je() + " : the turbulent dispersion correlation must be defined in the correlation bloc.");
-
-  return is;
-}
+#endif /* Terme_Boussinesq_PolyVEF_P0_Face_included */
