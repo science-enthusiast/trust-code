@@ -161,8 +161,9 @@ void Fluide_reel_base::mettre_a_jour(double t)
 
   const Champ_Inc_base& ch_T_ou_h = res_en_T_ ? equation("temperature").inconnue().valeur() : equation("enthalpie").inconnue().valeur(),
                         &ch_p = ref_cast(Navier_Stokes_std, equation("vitesse")).pression().valeur();
+  ConstDoubleTab_parts ppart(ch_p.valeurs());
 
-  const DoubleTab& temp_ou_enthalp = ch_T_ou_h.valeurs(), &pres = ch_p.valeurs();
+  const DoubleTab& temp_ou_enthalp = ch_T_ou_h.valeurs(), &pres = temp_ou_enthalp.dimension_tot(0) < ch_p.valeurs().dimension_tot(0) ? ppart[0] : ch_p.valeurs();
 
   DoubleTab& tab_Cp = Cp->valeurs(), &tab_mu = mu->valeurs(), &tab_lambda = lambda->valeurs(), &tab_alpha_fois_rho = alpha_fois_rho->valeurs(),
              &tab_nu = nu->valeurs(), &tab_alpha = alpha->valeurs(), &tab_beta = beta_th->valeurs(), &tab_rCp = rho_cp_comme_T_->valeurs();
@@ -347,7 +348,8 @@ void Fluide_reel_base::calculate_fluid_properties_enthalpie_incompressible()
 void Fluide_reel_base::calculate_fluid_properties()
 {
   const Champ_Inc_base& ch_T = equation("temperature").inconnue().valeur(), &ch_p = ref_cast(Navier_Stokes_std, equation("vitesse")).pression().valeur();
-  const DoubleTab& T = ch_T.valeurs(), &p = ch_p.valeurs(), &bT = ch_T.valeur_aux_bords(), &bp = ch_p.valeur_aux_bords();
+  ConstDoubleTab_parts ppart(ch_p.valeurs());
+  const DoubleTab& T = ch_T.valeurs(), &p = ch_p.valeurs().dimension_tot(0) == T.dimension_tot(0) ? ch_p.valeurs() : ppart[0], &bT = ch_T.valeur_aux_bords(), &bp = ch_p.valeur_aux_bords();
 
   Champ_Inc_base& ch_rho = ref_cast_non_const(Champ_Inc_base, rho.valeur());
   DoubleTab& val_rho = ch_rho.valeurs(), &bval_rho = ch_rho.val_bord();
