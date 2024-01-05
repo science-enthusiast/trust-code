@@ -13,37 +13,28 @@
 *
 *****************************************************************************/
 
-#include <Masse_PolyMAC_P0P1NC_Elem.h>
-#include <Domaine_PolyMAC_P0P1NC.h>
-#include <Domaine_Cl_PolyMAC.h>
-#include <Synonyme_info.h>
-#include <Equation_base.h>
+#ifndef Champ_Elem_PolyVEF_P0P1_included
+#define Champ_Elem_PolyVEF_P0P1_included
 
-Implemente_instanciable(Masse_PolyMAC_P0P1NC_Elem, "Masse_PolyMAC_P0P1NC_Elem|Masse_PolyMAC_P0_Elem", Masse_PolyMAC_P0P1NC_base);
-Add_synonym(Masse_PolyMAC_P0P1NC_Elem, "Masse_PolyVEF_P0_Elem");
+#include <Champ_Elem_PolyMAC_P0.h>
+#include <Operateur.h>
 
+class Domaine_PolyVEF;
 
-Sortie& Masse_PolyMAC_P0P1NC_Elem::printOn(Sortie& s) const { return s << que_suis_je() << " " << le_nom(); }
-
-Entree& Masse_PolyMAC_P0P1NC_Elem::readOn(Entree& s) { return s ; }
-
-void Masse_PolyMAC_P0P1NC_Elem::preparer_calcul()
+/*! @brief : class Champ_Elem_PolyVEF_P0P1
+ *
+ *  Champ correspondant a une inconnue scalaire (type temperature ou pression)
+ *  Degres de libertes : valeur aux elements + flux aux faces
+ *
+ */
+class Champ_Elem_PolyVEF_P0P1: public Champ_Elem_PolyMAC_P0
 {
-  associer_masse_proto(*this, le_dom_PolyMAC.valeur());
-  preparer_calcul_proto();
-}
+  Declare_instanciable(Champ_Elem_PolyVEF_P0P1);
+public:
+  const Domaine_PolyVEF& domaine_PolyVEF() const;
+  void init_auxiliary_variables() override;
+  DoubleTab& valeur_aux_sommets(const Domaine& domain, DoubleTab& result) const override;
+  DoubleVect& valeur_aux_sommets_compo(const Domaine& domain, DoubleVect& result, int ncomp) const override;
+};
 
-DoubleTab& Masse_PolyMAC_P0P1NC_Elem::appliquer_impl(DoubleTab& sm) const
-{
-  return appliquer_impl_proto(sm);
-}
-
-void Masse_PolyMAC_P0P1NC_Elem::dimensionner_blocs(matrices_t matrices, const tabs_t& semi_impl) const
-{
-  dimensionner_blocs_proto(matrices,semi_impl);
-}
-
-void Masse_PolyMAC_P0P1NC_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, double dt, const tabs_t& semi_impl, int resoudre_en_increments) const
-{
-  ajouter_blocs_proto(matrices, secmem, dt, semi_impl, resoudre_en_increments);
-}
+#endif /* Champ_Elem_PolyVEF_P0P1_included */

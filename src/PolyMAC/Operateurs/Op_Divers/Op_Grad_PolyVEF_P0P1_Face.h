@@ -13,37 +13,44 @@
 *
 *****************************************************************************/
 
-#include <Masse_PolyMAC_P0P1NC_Elem.h>
-#include <Domaine_PolyMAC_P0P1NC.h>
-#include <Domaine_Cl_PolyMAC.h>
-#include <Synonyme_info.h>
-#include <Equation_base.h>
+#ifndef Op_Grad_PolyVEF_P0P1_Face_included
+#define Op_Grad_PolyVEF_P0P1_Face_included
 
-Implemente_instanciable(Masse_PolyMAC_P0P1NC_Elem, "Masse_PolyMAC_P0P1NC_Elem|Masse_PolyMAC_P0_Elem", Masse_PolyMAC_P0P1NC_base);
-Add_synonym(Masse_PolyMAC_P0P1NC_Elem, "Masse_PolyVEF_P0_Elem");
+#include <Op_Grad_PolyMAC_P0_Face.h>
 
+class Champ_Face_PolyVEF;
 
-Sortie& Masse_PolyMAC_P0P1NC_Elem::printOn(Sortie& s) const { return s << que_suis_je() << " " << le_nom(); }
-
-Entree& Masse_PolyMAC_P0P1NC_Elem::readOn(Entree& s) { return s ; }
-
-void Masse_PolyMAC_P0P1NC_Elem::preparer_calcul()
+/*! @brief class Op_Grad_PolyVEF_P0P1_Face
+ *
+ *   Cette classe represente l'operateur de gradient
+ *   La discretisation est PolyVEF
+ *   On calcule le gradient d'un champ_Elem_PolyVEF (la pression)
+ *
+ *
+ * @sa Operateur_Grad_base
+ */
+class Op_Grad_PolyVEF_P0P1_Face : public Op_Grad_PolyMAC_P0_Face
 {
-  associer_masse_proto(*this, le_dom_PolyMAC.valeur());
-  preparer_calcul_proto();
-}
+  Declare_instanciable(Op_Grad_PolyVEF_P0P1_Face);
+public:
+  void completer() override;
 
-DoubleTab& Masse_PolyMAC_P0P1NC_Elem::appliquer_impl(DoubleTab& sm) const
-{
-  return appliquer_impl_proto(sm);
-}
+  /* interface {dimensionner,ajouter}_blocs -> cf Equation_base.h */
+  int has_interface_blocs() const override { return 1; };
+  /* fonctions etendues : permet de remmlir les lignes des faces virtuelles en reglant virt = 1 */
+  void dimensionner_blocs_ext(matrices_t matrices, int virt, const tabs_t& semi_impl = {}) const;
+  void ajouter_blocs_ext(matrices_t matrices, DoubleTab& secmem, int virt, const tabs_t& semi_impl = {}) const;
+  /* interface standard -> avec virt = 0 */
+  void dimensionner_blocs(matrices_t matrices, const tabs_t& semi_impl = {}) const override
+  {
+    dimensionner_blocs_ext(matrices, 0, semi_impl);
+  }
+  void ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl = {}) const override
+  {
+    ajouter_blocs_ext(matrices, secmem, 0, semi_impl);
+  }
 
-void Masse_PolyMAC_P0P1NC_Elem::dimensionner_blocs(matrices_t matrices, const tabs_t& semi_impl) const
-{
-  dimensionner_blocs_proto(matrices,semi_impl);
-}
+  void check_multiphase_compatibility() const override { }; //ok
+};
 
-void Masse_PolyMAC_P0P1NC_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, double dt, const tabs_t& semi_impl, int resoudre_en_increments) const
-{
-  ajouter_blocs_proto(matrices, secmem, dt, semi_impl, resoudre_en_increments);
-}
+#endif /* Op_Grad_PolyVEF_P0P1_Face_included */

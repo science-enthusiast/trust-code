@@ -13,37 +13,27 @@
 *
 *****************************************************************************/
 
-#include <Masse_PolyMAC_P0P1NC_Elem.h>
-#include <Domaine_PolyMAC_P0P1NC.h>
-#include <Domaine_Cl_PolyMAC.h>
-#include <Synonyme_info.h>
-#include <Equation_base.h>
+#ifndef Op_Div_PolyVEF_P0P1_included
+#define Op_Div_PolyVEF_P0P1_included
 
-Implemente_instanciable(Masse_PolyMAC_P0P1NC_Elem, "Masse_PolyMAC_P0P1NC_Elem|Masse_PolyMAC_P0_Elem", Masse_PolyMAC_P0P1NC_base);
-Add_synonym(Masse_PolyMAC_P0P1NC_Elem, "Masse_PolyVEF_P0_Elem");
+#include <Op_Div_PolyMAC_P0.h>
 
+/*! @brief class Op_Div_PolyVEF_P0P1
+ *
+ *   Cette classe represente l'operateur de divergence. La discretisation est PolyVEF
+ *   On calcule la divergence d'un champ_P1NC (la vitesse)
+ *
+ *
+ * @sa Op_Div_PolyMAC_P0
+ */
 
-Sortie& Masse_PolyMAC_P0P1NC_Elem::printOn(Sortie& s) const { return s << que_suis_je() << " " << le_nom(); }
-
-Entree& Masse_PolyMAC_P0P1NC_Elem::readOn(Entree& s) { return s ; }
-
-void Masse_PolyMAC_P0P1NC_Elem::preparer_calcul()
+class Op_Div_PolyVEF_P0P1 : public Op_Div_PolyMAC
 {
-  associer_masse_proto(*this, le_dom_PolyMAC.valeur());
-  preparer_calcul_proto();
-}
+  Declare_instanciable(Op_Div_PolyVEF_P0P1);
+public:
+  int has_interface_blocs() const override { return 1; }
+  void dimensionner_blocs(matrices_t matrices, const tabs_t& semi_impl = {}) const override;
+  void ajouter_blocs_ext(const DoubleTab& vit, matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl = {}) const override;
+};
 
-DoubleTab& Masse_PolyMAC_P0P1NC_Elem::appliquer_impl(DoubleTab& sm) const
-{
-  return appliquer_impl_proto(sm);
-}
-
-void Masse_PolyMAC_P0P1NC_Elem::dimensionner_blocs(matrices_t matrices, const tabs_t& semi_impl) const
-{
-  dimensionner_blocs_proto(matrices,semi_impl);
-}
-
-void Masse_PolyMAC_P0P1NC_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, double dt, const tabs_t& semi_impl, int resoudre_en_increments) const
-{
-  ajouter_blocs_proto(matrices, secmem, dt, semi_impl, resoudre_en_increments);
-}
+#endif /* Op_Div_PolyVEF_P0P1_included */

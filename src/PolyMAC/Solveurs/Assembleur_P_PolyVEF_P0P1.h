@@ -13,37 +13,24 @@
 *
 *****************************************************************************/
 
-#include <Masse_PolyMAC_P0P1NC_Elem.h>
-#include <Domaine_PolyMAC_P0P1NC.h>
-#include <Domaine_Cl_PolyMAC.h>
-#include <Synonyme_info.h>
-#include <Equation_base.h>
+#ifndef Assembleur_P_PolyVEF_P0P1_included
+#define Assembleur_P_PolyVEF_P0P1_included
 
-Implemente_instanciable(Masse_PolyMAC_P0P1NC_Elem, "Masse_PolyMAC_P0P1NC_Elem|Masse_PolyMAC_P0_Elem", Masse_PolyMAC_P0P1NC_base);
-Add_synonym(Masse_PolyMAC_P0P1NC_Elem, "Masse_PolyVEF_P0_Elem");
+#include <Assembleur_P_PolyMAC_P0.h>
 
-
-Sortie& Masse_PolyMAC_P0P1NC_Elem::printOn(Sortie& s) const { return s << que_suis_je() << " " << le_nom(); }
-
-Entree& Masse_PolyMAC_P0P1NC_Elem::readOn(Entree& s) { return s ; }
-
-void Masse_PolyMAC_P0P1NC_Elem::preparer_calcul()
+class Assembleur_P_PolyVEF_P0P1 : public Assembleur_P_PolyMAC_P0
 {
-  associer_masse_proto(*this, le_dom_PolyMAC.valeur());
-  preparer_calcul_proto();
-}
+  Declare_instanciable(Assembleur_P_PolyVEF_P0P1);
 
-DoubleTab& Masse_PolyMAC_P0P1NC_Elem::appliquer_impl(DoubleTab& sm) const
-{
-  return appliquer_impl_proto(sm);
-}
+public:
+  int assembler_mat(Matrice&,const DoubleVect&,int incr_pression,int resoudre_en_u) override;
+  // void dimensionner_continuite(matrices_t matrices, int aux_only = 0) const override;
+  // void assembler_continuite(matrices_t matrices, DoubleTab& secmem, int aux_only = 0) const override;
+  void modifier_secmem_pour_incr_p(const DoubleTab& press, const double fac, DoubleTab& incr) const override;
+  int modifier_solution(DoubleTab&) override;
 
-void Masse_PolyMAC_P0P1NC_Elem::dimensionner_blocs(matrices_t matrices, const tabs_t& semi_impl) const
-{
-  dimensionner_blocs_proto(matrices,semi_impl);
-}
+private:
+  IntTab div_v_tab1, div_v_tab2, div_p_tab1, div_p_tab2, grad_tab1, grad_tab2; //stencils des matrices "div" (lignes reelles seulement) et "grad" (toutes les lignes)
+};
 
-void Masse_PolyMAC_P0P1NC_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, double dt, const tabs_t& semi_impl, int resoudre_en_increments) const
-{
-  ajouter_blocs_proto(matrices, secmem, dt, semi_impl, resoudre_en_increments);
-}
+#endif /* Assembleur_P_PolyVEF_P0P1_included */
