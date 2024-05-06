@@ -84,7 +84,7 @@ int Perte_Charge_PolyMAC::lire_motcle_non_standard(const Motcle& mot, Entree& is
     {
       lire_regul(is);
       num_faces.resize(ref_cast(Domaine_VF, equation().domaine_dis().valeur()).nb_elem());
-      lire_surfaces(is, equation().domaine_dis().domaine(), equation().domaine_dis(), num_faces, sgn, 0);
+      lire_surfaces(is, equation().domaine_dis()->domaine(), equation().domaine_dis(), num_faces, sgn, 0);
       return 1;
     }
   else // non compris
