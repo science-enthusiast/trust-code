@@ -161,9 +161,9 @@ void Fluide_reel_base::mettre_a_jour(double t)
 
   const Champ_Inc_base& ch_T_ou_h = res_en_T_ ? equation("temperature").inconnue().valeur() : equation("enthalpie").inconnue().valeur(),
                         &ch_p = ref_cast(Navier_Stokes_std, equation("vitesse")).pression().valeur();
-  ConstDoubleTab_parts ppart(ch_p.valeurs());
-
-  const DoubleTab& temp_ou_enthalp = ch_T_ou_h.valeurs(), &pres = temp_ou_enthalp.dimension_tot(0) < ch_p.valeurs().dimension_tot(0) ? ppart[0] : ch_p.valeurs();
+  ConstDoubleTab_parts Tpart(ch_T_ou_h.valeurs()), ppart(ch_p.valeurs());
+  const DoubleTab& temp_ou_enthalp = Cp->valeurs().dimension_tot(0) < ch_T_ou_h.valeurs().dimension_tot(0) ? Tpart[0] : ch_T_ou_h.valeurs(),
+                   &pres = Cp->valeurs().dimension_tot(0) < ch_p.valeurs().dimension_tot(0) ? ppart[0] : ch_p.valeurs();
 
   DoubleTab& tab_Cp = Cp->valeurs(), &tab_mu = mu->valeurs(), &tab_lambda = lambda->valeurs(), &tab_alpha_fois_rho = alpha_fois_rho->valeurs(),
              &tab_nu = nu->valeurs(), &tab_alpha = alpha->valeurs(), &tab_beta = beta_th->valeurs(), &tab_rCp = rho_cp_comme_T_->valeurs();
@@ -347,12 +347,14 @@ void Fluide_reel_base::calculate_fluid_properties_enthalpie_incompressible()
 
 void Fluide_reel_base::calculate_fluid_properties()
 {
-  const Champ_Inc_base& ch_T = equation("temperature").inconnue().valeur(), &ch_p = ref_cast(Navier_Stokes_std, equation("vitesse")).pression().valeur();
-  ConstDoubleTab_parts ppart(ch_p.valeurs());
-  const DoubleTab& T = ch_T.valeurs(), &p = ch_p.valeurs().dimension_tot(0) == T.dimension_tot(0) ? ch_p.valeurs() : ppart[0], &bT = ch_T.valeur_aux_bords(), &bp = ch_p.valeur_aux_bords();
-
   Champ_Inc_base& ch_rho = ref_cast_non_const(Champ_Inc_base, rho.valeur());
   DoubleTab& val_rho = ch_rho.valeurs(), &bval_rho = ch_rho.val_bord();
+
+  const Champ_Inc_base& ch_T = equation("temperature").inconnue().valeur(), &ch_p = ref_cast(Navier_Stokes_std, equation("vitesse")).pression().valeur();
+  ConstDoubleTab_parts ppart(ch_p.valeurs()), Tpart(ch_T.valeurs());
+  const DoubleTab& T = ch_T.valeurs().dimension_tot(0) == val_rho.dimension_tot(0) ? ch_T.valeurs() : Tpart[0],
+                   &p = ch_p.valeurs().dimension_tot(0) == val_rho.dimension_tot(0) ? ch_p.valeurs() : ppart[0],
+                    &bT = ch_T.valeur_aux_bords(), &bp = ch_p.valeur_aux_bords();
 
   Champ_Inc_base& ch_h = ref_cast_non_const(Champ_Inc_base, h_ou_T.valeur());
   DoubleTab& val_h = ch_h.valeurs(), &bval_h = ch_h.val_bord();
