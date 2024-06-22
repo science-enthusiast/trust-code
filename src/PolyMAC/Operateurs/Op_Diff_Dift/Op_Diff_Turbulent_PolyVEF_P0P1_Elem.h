@@ -13,35 +13,35 @@
 *
 *****************************************************************************/
 
-#ifndef Op_Diff_Turbulent_PolyVEF_Face_included
-#define Op_Diff_Turbulent_PolyVEF_Face_included
+#ifndef Op_Diff_Turbulent_PolyVEF_P0P1_Elem_included
+#define Op_Diff_Turbulent_PolyVEF_P0P1_Elem_included
 
-#include <Op_Diff_PolyVEF_Face.h>
 #include <Op_Dift_Multiphase_proto.h>
-#include <Correlation.h>
-#include <Champ_Fonc.h>
-#include <vector>
+#include <Op_Diff_PolyVEF_P0P1_Elem.h>
 
-/*! @brief : class Op_Diff_Turbulent_PolyVEF_Face
+/*! @brief : class Op_Diff_Turbulent_PolyVEF_P0P1_Elem
  *
- *  Operateur de diffusion de vitesse prenant en compte l'effet de la turbulence par le biais d'une correlation de type Viscosite_turbulente_base.
- *
+ *  Version de Op_Diff_PolyVEF_P0P1_Elem prenant en compte l'effet de la turbulence par le biais d'une correlation de type Transport_turbulent.
+ *  (celle-ci reposera sur la modelisation de la viscosite turbulente fournie par la correlation Viscosite_turbulente de l'operateur de diffusion de la QDM)
  *
  */
 
-class Op_Diff_Turbulent_PolyVEF_Face: public Op_Diff_PolyVEF_Face, public Op_Dift_Multiphase_proto
+class Op_Diff_Turbulent_PolyVEF_P0P1_Elem: public Op_Diff_PolyVEF_P0P1_Elem, public Op_Dift_Multiphase_proto
 {
-  Declare_instanciable( Op_Diff_Turbulent_PolyVEF_Face );
+  Declare_instanciable( Op_Diff_Turbulent_PolyVEF_P0P1_Elem );
+  int dimension_min_nu() const override //pour que la correlation force l'anisotrope (cf. GGDH)
+  {
+    return ref_cast(Transport_turbulent_base, corr_.valeur()).dimension_min_nu();
+  }
 
-public:
-  void creer_champ(const Motcle& motlu) override;
   void get_noms_champs_postraitables(Noms& nom, Option opt = NONE) const override;
-  void preparer_calcul() override;
-  void mettre_a_jour(double temps) override;
   void completer() override;
-  void modifier_mu(DoubleTab&) const override; //prend en compte la diffusivite turbulente
+  void modifier_mu(DoubleTab&) const override; // prend en compte la diffusivite turbulente
+  void creer_champ(const Motcle& motlu) override;
+  void mettre_a_jour(double temps) override;
+
   bool is_turb() const override { return true; }
   const Correlation* correlation_viscosite_turbulente() const override { return &corr_; }
 };
 
-#endif /* Op_Diff_PolyVEF_Face_included */
+#endif /* Op_Diff_Turbulent_PolyVEF_P0P1_Elem_included */
