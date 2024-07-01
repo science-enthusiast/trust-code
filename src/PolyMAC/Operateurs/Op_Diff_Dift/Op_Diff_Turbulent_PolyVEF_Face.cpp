@@ -79,7 +79,7 @@ void Op_Diff_Turbulent_PolyVEF_Face::modifier_mu(DoubleTab& mu) const
   if (corr_.est_nul()) return; //rien a faire
   const DoubleTab& rho = equation().milieu().masse_volumique().passe(),
                    *alpha = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().inconnue().passe() : nullptr;
-  int i, nl = mu.dimension(0), n, N = equation().inconnue().valeurs().line_size(), cR = rho.dimension(0) == 1, d, D = dimension;
+  int i, nl = mu.dimension(0), d, D = dimension, n, N = equation().inconnue().valeurs().line_size() / D, cR = rho.dimension(0) == 1;
   if (mu.nb_dim() == 2) //nu scalaire
     for (i = 0; i < nl; i++)
       for (n = 0; n < N; n++)
