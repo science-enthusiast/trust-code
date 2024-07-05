@@ -26,6 +26,7 @@ public :
   void taux_cisaillement(const Domaine_dis&, const Domaine_Cl_dis& ,const Champ_Inc&, Champ_Fonc&) const override;
   void creer_champ_vorticite(const Schema_Temps_base& ,const Champ_Inc&, Champ_Fonc& ) const override;
 
+  bool is_polymac_p0() const override { return false; }
   bool is_polyvef() const override { return true; }
 };
 
