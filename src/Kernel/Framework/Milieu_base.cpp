@@ -127,7 +127,7 @@ void Milieu_base::discretiser(const Probleme_base& pb, const  Discretisation_bas
 {
   Cerr << "Medium discretization." << finl;
   Champ_Don& ch_lambda = conductivite(), &ch_alpha = diffusivite(), &ch_alpha_fois_rho = diffusivite_fois_rho(), &ch_beta_th = beta_t();
-  const Domaine_dis_base& domaine_dis=pb.equation(0).domaine_dis();
+  const Domaine_dis_base& domaine_dis=pb.domaine_dis();
 
   // PL: pas le temps de faire plus propre, je fais comme dans Fluide_Incompressible::discretiser pour gerer une conductivite lue dans un fichier MED. Test: Reprise_grossier_fin_VEF
   // ToDo: reecrire ces deux methodes discretiser
@@ -221,7 +221,7 @@ void Milieu_base::discretiser(const Probleme_base& pb, const  Discretisation_bas
 // methode utile pour F5 ! F5 n'appelle pas Milieu_base::discretiser mais Milieu_base::discretiser_porosite ...
 void Milieu_base::discretiser_porosite(const Probleme_base& pb, const Discretisation_base& dis)
 {
-  if (!zdb_.non_nul()) zdb_ = pb.equation(0).domaine_dis();
+  if (!zdb_.non_nul()) zdb_ = pb.domaine_dis();
   const double temps = pb.schema_temps().temps_courant();
   Nom fld_name = "porosite_volumique", fld_unit = "rien";
 
@@ -321,7 +321,7 @@ void Milieu_base::discretiser_porosite(const Probleme_base& pb, const Discretisa
 
 void Milieu_base::discretiser_diametre_hydro(const Probleme_base& pb, const Discretisation_base& dis)
 {
-  if (!zdb_.non_nul()) zdb_ = pb.equation(0).domaine_dis();
+  if (!zdb_.non_nul()) zdb_ = pb.domaine_dis();
   const double temps = pb.schema_temps().temps_courant();
   Nom fld_name = "diametre_hydraulique", fld_unit = "m";
 
