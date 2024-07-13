@@ -40,6 +40,7 @@
 #include <TRUST_2_MED.h>
 #include <Comm_Group_MPI.h>
 #include <Option_Interpolation.h>
+#include <Statistiques.h>
 
 #ifdef MEDCOUPLING_
 using MEDCoupling::DataArrayInt;
@@ -2367,8 +2368,10 @@ void Domaine::prepare_dec_with(const Domaine& other_domain, MEDCouplingFieldDoub
 {
 #if defined(MEDCOUPLING_) && defined(MPI_)
   using namespace MEDCoupling;
-
-  Cerr << "Building DEC of nature " << (int)dist->getNature() << " between " << le_nom() << " and " << other_domain.le_nom() << " : ";
+  double t0 = Statistiques::get_time_now();
+  Cerr << "Building DEC of nature" << MEDCouplingNatureOfField::GetRepr(dist->getNature())
+       << "from " << other_domain.le_nom() << " (" << Process::mp_sum(dist->getMesh()->getNumberOfCells())
+       << " cells) to " << le_nom() << " (" << Process::mp_sum(loc->getMesh()->getNumberOfCells()) << " cells) : ";
   std::set<True_int> pcs;
   for (True_int i=0; i<Process::nproc(); i++) pcs.insert(i);
   /* a bit technical */
@@ -2381,7 +2384,7 @@ void Domaine::prepare_dec_with(const Domaine& other_domain, MEDCouplingFieldDoub
   dec.attachTargetLocalField(loc);
   dec.synchronize();
 
-  Cerr << "OK" << finl;
+  Cerr << Statistiques::get_time_now() - t0 << " s" << finl;
 #else
   Process::exit("Domaine::prepare_dec_with() should not be called since it requires a TRUST version compiled with MEDCoupling and MPI!");
 #endif
