@@ -241,13 +241,16 @@ void Probleme_base::typer_lire_milieu(Entree& is)
 Entree& Probleme_base::lire_equations(Entree& is, Motcle& mot)
 {
   Nom un_nom;
+  const int nb_eq = nombre_d_equations();
+  is >> un_nom;
+  mot = un_nom;
+  if (nb_eq == 0) return is;
   Cerr << "Reading of the equations" << finl;
   bool already_read;
-  is >> un_nom;
   if (un_nom == "correlations") lire_correlations(is), already_read = false;
   else already_read = true;
 
-  for(int i = 0; i < nombre_d_equations(); i++, already_read = false)
+  for(int i = 0; i < nb_eq; i++, already_read = false)
     {
       if (!already_read) is >> un_nom;
       is >> getset_equation_by_name(un_nom);
