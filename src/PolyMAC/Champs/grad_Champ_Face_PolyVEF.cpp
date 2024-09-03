@@ -20,6 +20,8 @@
 #include <Champ_Fonc.h>
 #include <Dirichlet.h>
 #include <EChaine.h>
+#include <Equation_base.h>
+#include <Milieu_base.h>
 
 Implemente_instanciable(grad_Champ_Face_PolyVEF, "grad_Champ_Face_PolyVEF", Champ_Fonc_Elem_PolyMAC);
 
@@ -38,7 +40,7 @@ void grad_Champ_Face_PolyVEF::me_calculer()
 {
   const Domaine_PolyVEF& domaine = ref_cast(Domaine_PolyVEF, domaine_vf());
   const DoubleTab& n_f = domaine.face_normales();
-  const DoubleVect& ve = domaine.volumes();
+  const DoubleVect& ve = domaine.volumes(), &pf = champ_a_deriver().equation().milieu().porosite_face();
   const IntTab& e_f = domaine.elem_faces(), &f_e = domaine.face_voisins();
   const int D = dimension, N = valeurs().line_size()/(D*D), ne = domaine.nb_elem();
   int e, f, i, c, n, d_U, d_X;
@@ -50,7 +52,7 @@ void grad_Champ_Face_PolyVEF::me_calculer()
       for (n = 0 ; n<N ; n++)
         for (d_U = 0; d_U < D; d_U++)
           for (d_X = 0; d_X < D; d_X++)
-            valeurs()(e, N * ( D*d_U+d_X ) + n) += 1/ve(e) * (c == 0 ? 1 : -1) * n_f(f, d_X) * champ_a_deriver().valeurs()(f, N*d_U + n);
+            valeurs()(e, N * ( D*d_U+d_X ) + n) += 1/ve(e) * (c == 0 ? 1 : -1) * n_f(f, d_X) * pf(f) * champ_a_deriver().valeurs()(f, N*d_U + n);
 
   valeurs().echange_espace_virtuel();
 }
