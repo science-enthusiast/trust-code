@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2024, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -37,11 +37,11 @@ Entree& Terme_Boussinesq_PolyVEF_P0_Face::readOn(Entree& s) { return Terme_Bouss
 void Terme_Boussinesq_PolyVEF_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
   const Domaine_PolyMAC& domaine = le_dom_PolyMAC.valeur();
-  const DoubleTab& param = equation_scalaire().inconnue().valeurs();
+  const DoubleTab& param = equation_scalaire().inconnue()->valeurs();
   const DoubleTab& beta_valeurs = beta().valeur().valeurs();
   const IntTab& f_e = domaine.face_voisins();
-  const DoubleTab& rho = equation().milieu().masse_volumique().passe(), &vfd = domaine.volumes_entrelaces_dir(),
-                   *alp = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().inconnue().passe() : nullptr;
+  const DoubleTab& rho = equation().milieu().masse_volumique()->passe(), &vfd = domaine.volumes_entrelaces_dir(),
+                   *alp = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().inconnue()->passe() : nullptr;
   const DoubleVect& pf = equation().milieu().porosite_face(), &grav = gravite().valeurs();
 
   // Verifie la validite de T0:

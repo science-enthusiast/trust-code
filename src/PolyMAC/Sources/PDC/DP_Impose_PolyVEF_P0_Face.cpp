@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2024, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -39,9 +39,8 @@ void DP_Impose_PolyVEF_P0_Face::dimensionner_blocs(matrices_t matrices, const ta
   Matrice_Morse& mat = *matrices.at(nom_inco), mat2;
 
   IntTrav sten(0, 2);
-  sten.set_smart_resize(1);
 
-  int i, f, d, db, D = dimension, n, N = equation().inconnue().valeurs().line_size() / D, nf_tot = dom.nb_faces_tot();
+  int i, f, d, db, D = dimension, n, N = equation().inconnue()->valeurs().line_size() / D, nf_tot = dom.nb_faces_tot();
   for (i = 0; i < num_faces.size(); i++)
     if ((f = num_faces(i)) < dom.nb_faces())
       for (d = 0; d < D; d++)
@@ -58,15 +57,15 @@ void DP_Impose_PolyVEF_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& se
 {
   const Domaine_Poly_base& dom = ref_cast(Domaine_Poly_base, equation().domaine_dis().valeur());
   const DoubleVect& pf = equation().milieu().porosite_face(), &fs = dom.face_surfaces(), &vf = dom.volumes_entrelaces();
-  const DoubleTab& vit = equation().inconnue().valeurs(), *alp =
-                           sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().inconnue().passe() : NULL, &vfd = dom.volumes_entrelaces_dir(), &nf =
+  const DoubleTab& vit = equation().inconnue()->valeurs(), *alp =
+                           sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().inconnue()->passe() : nullptr, &vfd = dom.volumes_entrelaces_dir(), &nf =
                                  dom.face_normales();
   const IntTab& f_e = dom.face_voisins();
   const std::string& nom_inco = equation().inconnue().le_nom().getString();
-  Matrice_Morse *mat = matrices.count(nom_inco) ? matrices.at(nom_inco) : NULL;
+  Matrice_Morse *mat = matrices.count(nom_inco) ? matrices.at(nom_inco) : nullptr;
   int i, j, e, f, d, db, D = dimension, n, N = vit.line_size() / D;
 
-  double rho = equation().milieu().masse_volumique()(0, 0), fac_rho = (equation().probleme().is_dilatable() || sub_type(Pb_Multiphase, equation().probleme())) ? 1.0 : 1.0 / rho;
+  double rho = equation().milieu().masse_volumique()->valeurs()(0, 0), fac_rho = (equation().probleme().is_dilatable() || sub_type(Pb_Multiphase, equation().probleme())) ? 1.0 : 1.0 / rho;
 
   if (regul_)
     {

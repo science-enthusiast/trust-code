@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2024, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -31,12 +31,12 @@ void Terme_Source_Qdm_Face_PolyVEF_P0::ajouter_blocs(matrices_t matrices, Double
   const Domaine_Poly_base& dom = ref_cast(Domaine_Poly_base, equation().domaine_dis().valeur());
   const Champ_Face_PolyVEF_P0& ch = ref_cast(Champ_Face_PolyVEF_P0, equation().inconnue().valeur());
   const DoubleTab& vals = la_source->valeurs(), &vfd = dom.volumes_entrelaces_dir(),
-                   &rho = equation().milieu().masse_volumique().passe(), &nf = dom.face_normales(),
-                    *alp = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().inconnue().passe() : NULL;
+                   &rho = equation().milieu().masse_volumique()->passe(), &nf = dom.face_normales(),
+                    *alp = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().inconnue()->passe() : nullptr;
   const DoubleVect& pf = equation().milieu().porosite_face(), &fs = dom.face_surfaces();
   const IntTab& f_e = dom.face_voisins(), &fcl = ch.fcl();
   int e, f, i, cS = (vals.dimension_tot(0) == 1), cR = (rho.dimension_tot(0) == 1), p0 = sub_type(Domaine_PolyMAC_P0, dom),
-               d, D = dimension, n, N = equation().inconnue().valeurs().line_size() / (p0 ? D : 1);
+               d, D = dimension, n, N = equation().inconnue()->valeurs().line_size() / (p0 ? D : 1);
 
   /* contributions aux faces (par chaque voisin), aux elems */
   DoubleTrav a_f(N), rho_f(N), val_f(N), rho_m(2);

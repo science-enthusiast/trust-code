@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2024, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -41,14 +41,14 @@ void Perte_Charge_PolyVEF_P0::ajouter_blocs(matrices_t matrices, DoubleTab& secm
   assert(has_interface_blocs());
 
   const Domaine_Poly_base& domaine = ref_cast(Domaine_Poly_base, equation().domaine_dis().valeur());
-  const Pb_Multiphase *pbm = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()) : NULL;
+  const Pb_Multiphase *pbm = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()) : nullptr;
   const Champ_Face_PolyVEF_P0& ch = ref_cast(Champ_Face_PolyVEF_P0, equation().inconnue().valeur());
   const Champ_Don& dh = diam_hydr;
 
   const DoubleTab& xp = domaine.xp(), &vit = la_vitesse->valeurs(), &pvit = la_vitesse->passe(),
-                   &nu = le_fluide->viscosite_cinematique().valeurs(), &vfd = domaine.volumes_entrelaces_dir(),
-                    &mu = le_fluide->viscosite_dynamique().valeurs(), &rho = le_fluide->masse_volumique().passe(),
-                     *alp = pbm ? &pbm->equation_masse().inconnue().passe() : nullptr;
+                   &nu = le_fluide->viscosite_cinematique()->valeurs(), &vfd = domaine.volumes_entrelaces_dir(),
+                    &mu = le_fluide->viscosite_dynamique()->valeurs(), &rho = le_fluide->masse_volumique()->passe(),
+                     *alp = pbm ? &pbm->equation_masse().inconnue()->passe() : nullptr;
 
   const DoubleVect& pf = le_fluide->porosite_face();
   const Multiplicateur_diphasique_base *fmult = pbm && pbm->has_correlation("multiplicateur_diphasique") ?
@@ -100,7 +100,7 @@ void Perte_Charge_PolyVEF_P0::ajouter_blocs(matrices_t matrices, DoubleTab& secm
         if (f < domaine.nb_faces())
           {
             /* vecteur vitesse en e */
-            double dh_e = C_dh ? dh(0, 0) : dh->valeur_a_compo(pos, 0);
+            double dh_e = C_dh ? dh->valeurs()(0, 0) : dh->valeur_a_compo(pos, 0);
             for (d = 0; d < D; d++)
               for (n = 0; n < N; n++)
                 v(n, d) = pvit(f, N * d + n); //vitesse par variable auxiliaire
@@ -159,7 +159,7 @@ DoubleTab& Perte_Charge_PolyVEF_P0::ajouter(DoubleTab& resu) const
   const Champ_Don& nu = le_fluide->viscosite_cinematique(), &dh = diam_hydr;
   const DoubleTab& xp = domaine.xp(), &xv = domaine.xv(), &vit = la_vitesse->valeurs();
   const DoubleVect& pe = equation().milieu().porosite_elem(), &pf = equation().milieu().porosite_face(), &fs = domaine.face_surfaces();
-  const Sous_Domaine *pssz = sous_domaine ? &le_sous_domaine.valeur() : NULL;
+  const Sous_Domaine *pssz = sous_domaine ? &le_sous_domaine.valeur() : nullptr;
   const IntTab& e_f = domaine.elem_faces(), &f_e = domaine.face_voisins();
   int i, j, k, f, fb, r, C_nu = sub_type(Champ_Uniforme, nu.valeur()), C_dh = sub_type(Champ_Uniforme, diam_hydr.valeur());
   double t = equation().schema_temps().temps_courant();
@@ -174,7 +174,7 @@ DoubleTab& Perte_Charge_PolyVEF_P0::ajouter(DoubleTab& resu) const
         pos(r) = xp(e, r);
 
       /* valeurs evaluees en l'element : nu, Dh, vecteur vitesse, Re, coefficients de perte de charge isotrope et directionel + la direction */
-      double nu_e = C_nu ? nu(0, 0) : nu->valeur_a_compo(pos, 0), dh_e = C_dh ? dh(0, 0) : dh->valeur_a_compo(pos, 0);
+      double nu_e = C_nu ? nu->valeurs()(0, 0) : nu->valeur_a_compo(pos, 0), dh_e = C_dh ? dh->valeurs()(0, 0) : dh->valeur_a_compo(pos, 0);
       for (j = domaine.vedeb(e), ve = 0; j < domaine.vedeb(e + 1); j++)
         for (r = 0; r < dimension; r++)
           fb = domaine.veji(j), ve(r) += domaine.veci(j, r) * vit(fb) * pf(fb) / pe(e);
@@ -210,7 +210,7 @@ void Perte_Charge_PolyVEF_P0::contribuer_a_avec(const DoubleTab& inco, Matrice_M
   const Champ_Don& nu = le_fluide->viscosite_cinematique(), &dh = diam_hydr;
   const DoubleTab& xp = domaine.xp(), &xv = domaine.xv(), &vit = inco;
   const DoubleVect& pe = equation().milieu().porosite_elem(), &pf = equation().milieu().porosite_face(), &fs = domaine.face_surfaces();
-  const Sous_Domaine *pssz = sous_domaine ? &le_sous_domaine.valeur() : NULL;
+  const Sous_Domaine *pssz = sous_domaine ? &le_sous_domaine.valeur() : nullptr;
   const IntTab& e_f = domaine.elem_faces(), &f_e = domaine.face_voisins();
   int i, j, k, f, fb, r, C_nu = sub_type(Champ_Uniforme, nu.valeur()), C_dh = sub_type(Champ_Uniforme, diam_hydr.valeur());
   double t = equation().schema_temps().temps_courant();
@@ -223,7 +223,7 @@ void Perte_Charge_PolyVEF_P0::contribuer_a_avec(const DoubleTab& inco, Matrice_M
         pos(r) = xp(e, r);
 
       /* valeurs evaluees en l'element : nu, Dh, vecteur vitesse, Re, coefficients de perte de charge isotrope et directionel + la direction */
-      double nu_e = C_nu ? nu(0, 0) : nu->valeur_a_compo(pos, 0), dh_e = C_dh ? dh(0, 0) : dh->valeur_a_compo(pos, 0);
+      double nu_e = C_nu ? nu->valeurs()(0, 0) : nu->valeur_a_compo(pos, 0), dh_e = C_dh ? dh->valeurs()(0, 0) : dh->valeur_a_compo(pos, 0);
       for (j = domaine.vedeb(e), ve = 0; j < domaine.vedeb(e + 1); j++)
         for (r = 0; r < dimension; r++)
           fb = domaine.veji(j), ve(r) += domaine.veci(j, r) * vit(fb) * pf(fb) / pe(e);
