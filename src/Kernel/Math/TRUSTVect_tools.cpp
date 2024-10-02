@@ -161,8 +161,8 @@ template<typename ExecSpace, typename _TYPE_, typename _SIZE_, bool IS_MUL>
 void operation_speciale_tres_generic_kernel(TRUSTVect<_TYPE_, _SIZE_>& resu, const TRUSTVect<_TYPE_, _SIZE_>& vx, int nblocs_left,
                                             Block_Iter<_SIZE_>& bloc_itr, const int line_size_vx, const int vect_size_tot, const int delta_line_size)
 {
-  auto vx_view= vx.template view_ro<ExecSpace>();
-  auto resu_view= resu.template view_rw<ExecSpace>();
+  auto vx_view= vx.template view_ro<1, ExecSpace>();
+  auto resu_view= resu.template view_rw<1, ExecSpace>();
 
   for (; nblocs_left; nblocs_left--)
     {
@@ -255,8 +255,8 @@ template<typename ExecSpace, typename _TYPE_, typename _SIZE_, bool IS_ADD>
 void operation_speciale_generic_kernel(TRUSTVect<_TYPE_, _SIZE_>& resu, const TRUSTVect<_TYPE_, _SIZE_>& vx, _TYPE_ alpha, int nblocs_left,
                                        Block_Iter<_SIZE_>& bloc_itr, const int vect_size_tot, const int line_size)
 {
-  auto vx_view= vx.template view_ro<ExecSpace>();
-  auto resu_view= resu.template view_rw<ExecSpace>();
+  auto vx_view= vx.template view_ro<1, ExecSpace>();
+  auto resu_view= resu.template view_rw<1, ExecSpace>();
 
   for (; nblocs_left; nblocs_left--)
     {
@@ -338,8 +338,8 @@ void operator_vect_vect_generic_kernel(TRUSTVect<_TYPE_,_SIZE_>& resu, const TRU
                         IS_MULT = (_TYPE_OP_ == TYPE_OPERATOR_VECT::MULT_), IS_DIV = (_TYPE_OP_ == TYPE_OPERATOR_VECT::DIV_),
                         IS_EGAL = (_TYPE_OP_ == TYPE_OPERATOR_VECT::EGAL_);
 
-  auto vx_view= vx.template view_ro<ExecSpace>();
-  auto resu_view= resu.template view_rw<ExecSpace>();
+  auto vx_view= vx.template view_ro<1, ExecSpace>();
+  auto resu_view= resu.template view_rw<1, ExecSpace>();
 
   for (; nblocs_left; nblocs_left--)
     {
@@ -431,7 +431,7 @@ void operator_vect_single_generic_kernel(TRUSTVect<_TYPE_,_SIZE_>& resu, const _
                         IS_NEGATE = (_TYPE_OP_ == TYPE_OPERATOR_SINGLE::NEGATE_), IS_INV = (_TYPE_OP_ == TYPE_OPERATOR_SINGLE::INV_), IS_ABS = (_TYPE_OP_ == TYPE_OPERATOR_SINGLE::ABS_),
                         IS_SQRT = (_TYPE_OP_ == TYPE_OPERATOR_SINGLE::SQRT_), IS_SQUARE = (_TYPE_OP_ == TYPE_OPERATOR_SINGLE::SQUARE_);
 
-  auto resu_view= resu.template view_rw<ExecSpace>();
+  auto resu_view= resu.template view_rw<1, ExecSpace>();
 
   for (; nblocs_left; nblocs_left--)
     {
@@ -567,7 +567,7 @@ void local_extrema_vect_generic_kernel(const TRUSTVect<_TYPE_,_SIZE_>& vx, int n
 
   if (not(IS_MAXS || IS_MINS)) {Process::exit("Wrong operation type in local_extrema_vect_generic_kernel");}
 
-  auto vx_view= vx.template view_ro<ExecSpace>();
+  auto vx_view= vx.template view_ro<1, ExecSpace>();
 
   for (; nblocs_left; nblocs_left--)
     {
@@ -692,7 +692,7 @@ void local_operations_vect_bis_generic_kernel(const TRUSTVect<_TYPE_,_SIZE_>& vx
 {
   static constexpr bool IS_SQUARE = (_TYPE_OP_ == TYPE_OPERATION_VECT_BIS::SQUARE_), IS_SUM = (_TYPE_OP_ == TYPE_OPERATION_VECT_BIS::SOMME_);
 
-  auto vx_view= vx.template view_ro<ExecSpace>();
+  auto vx_view= vx.template view_ro<1, ExecSpace>();
 
   for (; nblocs_left; nblocs_left--)
     {
@@ -799,7 +799,7 @@ void invalidate_data_kernel(TRUSTVect<_TYPE_,_SIZE_>& resu,
                             const ArrOfInt& items_blocs, const int line_size, const int blocs_size)
 {
   _TYPE_ invalid = (_TYPE_)-987654321;
-  auto resu_view= resu.template view_rw<ExecSpace>();
+  auto resu_view= resu.template view_rw<1, ExecSpace>();
   bool kernelOnDevice = is_default_exec_space<ExecSpace>;
 
   int i = 0;
@@ -860,8 +860,8 @@ template<typename ExecSpace, typename _TYPE_, typename _SIZE_>
 void local_prodscal_kernel(const TRUSTVect<_TYPE_,_SIZE_>& vx, const TRUSTVect<_TYPE_,_SIZE_>& vy, int nblocs_left,
                            Block_Iter<_SIZE_>& bloc_itr, const int vect_size_tot, const int line_size, _TYPE_& sum)
 {
-  auto vx_view= vx.template view_ro<ExecSpace>();
-  auto vy_view= vy.template view_ro<ExecSpace>();
+  auto vx_view= vx.template view_ro<1, ExecSpace>();
+  auto vy_view= vy.template view_ro<1, ExecSpace>();
 
   for (; nblocs_left; nblocs_left--)
     {

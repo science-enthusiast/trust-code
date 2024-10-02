@@ -48,8 +48,9 @@ template <typename ExecSpace, typename _TYPE_, typename _SIZE_>
 void local_max_abs_tab_kernel(const TRUSTTab<_TYPE_,_SIZE_>& tableau, TRUSTArray<_TYPE_,_SIZE_>& max_colonne,
                               const TRUSTArray<int,_SIZE_>& blocs, const int lsize)
 {
-  auto tableau_view= tableau.template view_ro<ExecSpace>();
-  auto max_colonne_view= max_colonne.template view_rw<ExecSpace>();
+
+  auto tableau_view= tableau.template view_ro<2, ExecSpace>();
+  auto max_colonne_view= max_colonne.template view_rw<1, ExecSpace>();
 
   const _SIZE_ nblocs = blocs.size_array() >> 1;
   for (_SIZE_ ibloc = 0; ibloc < nblocs; ibloc++)
