@@ -5,10 +5,10 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/Kernel/Utilitaires
   ${CMAKE_SOURCE_DIR}/Kernel/Math
   ${CMAKE_SOURCE_DIR}/MAIN
-  $ENV{TRUST_ROOT}/exec/python/include   # For GTest
+  $ENV{TRUST_GTEST_ROOT}/include  # For GTest
 )
 
-find_library(gtestlib NAMES gtest PATHS $ENV{TRUST_ROOT}/exec/lib REQUIRED)
+find_library(gtestlib NAMES gtest HINTS $ENV{TRUST_GTEST_ROOT}/lib REQUIRED)
 message(STATUS "Found GTest library at: ${gtestlib}")
 
 #find_library(kern_num_lib NAMES TRUST_mpi_numeric_kernel.a PATHS $ENV{TRUST_ROOT}/lib REQUIRED)
