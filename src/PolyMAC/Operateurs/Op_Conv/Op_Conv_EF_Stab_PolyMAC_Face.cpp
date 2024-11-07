@@ -179,7 +179,7 @@ inline DoubleTab& Op_Conv_EF_Stab_PolyMAC_Face::ajouter(const DoubleTab& tab_inc
       CIntArrView m2j = static_cast<const IntVect&>(domaine.m2j).view_ro();
       CIntArrView vedeb = static_cast<const IntVect&>(domaine.vedeb).view_ro();
       CIntArrView veji = static_cast<const IntVect&>(domaine.veji).view_ro();
-      CIntTabView3 equiv = equiv_.view3_ro();
+      CIntTabView3 equiv = equiv_.view_ro<3>();
       CDoubleTabView veci = domaine.veci.view_ro();
       CIntTabView fcl = ch.fcl().view_ro();
       CDoubleArrView inco = static_cast<const DoubleVect&>(tab_inco).view_ro();
