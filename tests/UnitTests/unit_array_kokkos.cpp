@@ -154,8 +154,9 @@ TEST(TRUSTArrayKokkos, FlattenedTabAccessors) {
         EXPECT_EQ(tab_array.size_array(), n0*n1*n2);
         EXPECT_EQ(tab.size_array(), n0*n1*n2);
 
-        //You cannot use the wrong SHAPE on a tab 4!=2
+        //You cannot use the wrong SHAPE on a tab 4!=3
         EXPECT_DEATH( {tab.check_flattened<4>(); }, ".*" );
+
         //You cannot use a SHAPE>1 on an array;
         EXPECT_DEATH( {array.check_flattened<4>(); }, ".*" );
         EXPECT_DEATH( {tab_array.check_flattened<4>(); }, ".*" );
@@ -179,6 +180,9 @@ TEST(TRUSTArrayKokkos, FlattenedTabAccessors) {
         EXPECT_TRUE(tab_array.check_flattened<1>());
         EXPECT_FALSE(array.check_flattened<1>());
 
+        //OK to create a multiD view on a 1D tab
+        TRUSTTab<double, int> tab_1D(n0);
+        EXPECT_FALSE(tab_1D.check_flattened<4>());
 }
 
 #pragma diag_default 177
