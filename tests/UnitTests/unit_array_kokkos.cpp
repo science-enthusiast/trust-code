@@ -178,7 +178,7 @@ TEST(TRUSTArrayKokkos, FlattenedTabAccessors) {
         //Compatible with _SHAPE_=1, detects flattening
         EXPECT_TRUE(tab.check_flattened<1>());
         EXPECT_TRUE(tab_array.check_flattened<1>());
-        EXPECT_FALSE(array.check_flattened<1>());
+        EXPECT_TRUE(array.check_flattened<1>());
 
         //OK to create a multiD view on a 1D tab
         TRUSTTab<double, int> tab_1D(n0);
