@@ -56,33 +56,25 @@ void local_max_abs_tab_kernel(const TRUSTTab<_TYPE_,_SIZE_>& tableau, TRUSTArray
   for (_SIZE_ ibloc = 0; ibloc < nblocs; ibloc++)
     {
       const _SIZE_ begin_bloc = blocs[ibloc], end_bloc = blocs[ibloc+1];
-      // Define a Kokkos range policy based on the execution space
-      Kokkos::RangePolicy<ExecSpace> policy(begin_bloc, end_bloc);
-      // Parallel loop for any value of lsize, using atomic_max for thread safety
-      Kokkos::parallel_for(start_gpu_timer(__KERNEL_NAME__), policy, KOKKOS_LAMBDA(const int i)
-      {
-        for (int j = 0; j < lsize; j++)
-          {
-            const _TYPE_ x = Kokkos::fabs(tableau_view(i,j));
-            Kokkos::atomic_max(&max_colonne_view(j), x);
-          }
-      });
-
-      /*
-      for (int j = 0; j < lsize; j++)
+      if (begin_bloc<end_bloc) // very important: empty bloc at the end would erase max_colonne
         {
-          Kokkos::parallel_reduce(start_gpu_timer(__KERNEL_NAME__), policy, KOKKOS_LAMBDA(const int i, _TYPE_& local_max)
+          Kokkos::RangePolicy<ExecSpace> policy(0, lsize);
+          Kokkos::parallel_for(start_gpu_timer(__KERNEL_NAME__),
+                               policy,
+                               KOKKOS_LAMBDA(const int j)
           {
-            const _TYPE_ x = Kokkos::fabs(tableau_view(i,j));
-            local_max=Kokkos::fmax(local_max, x);
-          }, Kokkos::Max<_TYPE_>(max_colonne_view(j)));
+            _TYPE_ local_max=0;
+            for (int i = begin_bloc; i < end_bloc ; i++)
+              {
+                const _TYPE_ x = Kokkos::fabs(tableau_view(i,j));
+                local_max = Kokkos::fmax(local_max, x);
+              }
+            max_colonne_view(j)=local_max;
+          });
+          bool kernelOnDevice = is_default_exec_space<ExecSpace>;
+          end_gpu_timer(kernelOnDevice, __KERNEL_NAME__);
         }
-        */
-
     }
-
-  bool kernelOnDevice = is_default_exec_space<ExecSpace>;
-  end_gpu_timer(kernelOnDevice, __KERNEL_NAME__);
 }
 }
 
