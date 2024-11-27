@@ -154,16 +154,22 @@ void Source_Masse_Fluide_Dilatable_VEF::ajouter_projection(const Fluide_Dilatabl
   const Domaine_Cl_dis_base& zclb = domaine_cl_dis_.valeur();
   const Domaine_VEF& zp1b = ref_cast(Domaine_VEF, zclb.domaine_dis());
   const DoubleTab& val_flux0 = ch_front_source_->valeurs();
-  DoubleTrav val_flux(zp1b.nb_faces(), 1);
+  DoubleTrav val_flux(zp1b.nb_faces(), 1); // DOUBT: Why not 1 dimensional?
 
   // pour post
   Champ_Don_base * post_src_ch = fluide.has_source_masse_projection_champ() ? &ref_cast_non_const(Fluide_Dilatable_base, fluide).source_masse_projection() : nullptr;
 
+  const int nb_faces = zp1b.nb_faces();
+  DoubleTabView val_flux_view = val_flux.view_rw();
+  CDoubleTabView val_flux0_view = val_flux0.view_ro(); 
   // Handle uniform case ... such a pain:
   const int is_uniforme = sub_type(Champ_front_uniforme, ch_front_source_.valeur());
-  for (int i = 0; i < zp1b.nb_faces(); i++)
+  Kokkos::parallel_for(start_gpu_timer(__KERNEL_NAME__), nb_faces, KOKKOS_LAMBDA(const int i)
+  {
+    // DOUBT: How big is line_size? Hierarchial parallelism?
     for (int ncomp = 0; ncomp < val_flux0.line_size(); ncomp++)
-      val_flux(i, 0) += is_uniforme ? val_flux0(0, ncomp) : val_flux0(i, ncomp);
+      val_flux_view(i, 0) += is_uniforme ? val_flux0_view(0, ncomp) : val_flux0_view(i, ncomp);
+  });
 
   /*
    * Attention : ici resu est comme la Pression => P0 et P1 ... Pa peut etre
@@ -177,25 +183,32 @@ void Source_Masse_Fluide_Dilatable_VEF::ajouter_projection(const Fluide_Dilatabl
   const IntTab& face_voisins = zp1b.face_voisins(), &elem_faces = zp1b.elem_faces(), &face_sommets = zp1b.face_sommets();
   const DoubleVect& volumes_entrelaces = zp1b.volumes_entrelaces();
 
+  const int nb_cond_lim = domaine_cl_dis_->nb_cond_lim(); 
+
+  // DOUBT: accessing an object inside a parallel_for
+  Kokkos::View<Domaine_Cl_dis_base*> domaine_cl_dis_view("domaine_cl_dis", 1);
+  domaine_cl_dis_view(0) = domaine_cl_dis_; 
+
+  // DOUBT: How big is domaine_cl_dis_->nb_cond_lim()? 
   // remplir tab_flux_faces (seulement au bord !)
-  for (int n_bord = 0; n_bord < domaine_cl_dis_->nb_cond_lim(); n_bord++)
-    {
-      const Cond_lim& la_cl = domaine_cl_dis_->les_conditions_limites(n_bord);
-      const Front_VF& le_bord = ref_cast(Front_VF, la_cl->frontiere_dis());
+  Kokkos::parallel_for(start_gpu_timer(__KERNEL_NAME__), nb_cond_lim, KOKKOS_LAMBDA(const int n_bord)
+  {
+    const Cond_lim& la_cl = domaine_cl_dis_view(0).les_conditions_limites(n_bord);
+    const Front_VF& le_bord = ref_cast(Front_VF, la_cl->frontiere_dis());
 
-      if (le_bord.le_nom() == nom_bord_)
-        {
-          const int ndeb = le_bord.num_premiere_face(), nfin = ndeb + le_bord.nb_faces();
+    if (le_bord.le_nom() == nom_bord_)
+      {
+        const int ndeb = le_bord.num_premiere_face(), nfin = ndeb + le_bord.nb_faces();
 
-          for (int num_face = ndeb; num_face < nfin; num_face++)
-            {
-              const int elem1 = face_voisins(num_face, 0), elem2 = face_voisins(num_face, 1);
-              int elem = elem1 == -1 ? elem2 : elem1;
-              const double surf = zp1b.surface(num_face);
-              tab_flux_faces(num_face) = val_flux(num_face - ndeb, 0) * surf / zp1b.volumes(elem); // TODO multiple elements!! units val_flux(num_face-ndeb,0) *surf [kg.s-1] => gives [kg.m-3.s-1]
-            }
-        }
-    }
+        for (int num_face = ndeb; num_face < nfin; num_face++)
+          {
+            const int elem1 = face_voisins(num_face, 0), elem2 = face_voisins(num_face, 1);
+            int elem = elem1 == -1 ? elem2 : elem1;
+            const double surf = zp1b.surface(num_face);
+            tab_flux_faces(num_face) = val_flux(num_face - ndeb, 0) * surf / zp1b.volumes(elem); // TODO multiple elements!! units val_flux(num_face-ndeb,0) *surf [kg.s-1] => gives [kg.m-3.s-1]
+          }
+      }
+  });
 
   DoubleTrav tab_flux_som(nb_som_tot), volume_int_som(nb_som_tot);
 
