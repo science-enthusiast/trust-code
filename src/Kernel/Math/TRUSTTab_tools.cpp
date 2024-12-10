@@ -52,10 +52,6 @@ void local_max_abs_tab_kernel(const TRUSTTab<_TYPE_,_SIZE_>& tableau, TRUSTArray
   auto tableau_view= tableau.template view_ro<2, ExecSpace>();
   auto max_colonne_view= max_colonne.template view_rw<1, ExecSpace>();
 
-  //Host counterpart of max_colonne used because we can't do a reduction in a device view
-  //reduction in a scalar (here max_colonne(j)) is always on the host it seems
-  auto max_colonne_view_host= max_colonne.template view_rw<1, Kokkos::DefaultHostExecutionSpace>();
-
   const _SIZE_ nblocs = blocs.size_array() >> 1;
   for (_SIZE_ ibloc = 0; ibloc < nblocs; ibloc++)
     {
@@ -73,15 +69,14 @@ void local_max_abs_tab_kernel(const TRUSTTab<_TYPE_,_SIZE_>& tableau, TRUSTArray
                 const _TYPE_ x = Kokkos::fabs(tableau_view(i,j));
                 local_max = Kokkos::fmax(local_max, x);
               },
-              Kokkos::Max<_TYPE_>(max_colonne_view_host(j))); //Reduce in the host
+              //Reduce in a subview, enabled by specifying execspace in the reducer !
+              Kokkos::Max<_TYPE_, ExecSpace>(Kokkos::subview(max_colonne_view,j)));
 
               bool kernelOnDevice = is_default_exec_space<ExecSpace>;
               end_gpu_timer(kernelOnDevice, __KERNEL_NAME__);
             }
         }
-
     }
-  Kokkos::deep_copy(max_colonne_view, max_colonne_view_host); //Deep copy in the device
 }
 
 }
