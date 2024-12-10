@@ -52,30 +52,38 @@ void local_max_abs_tab_kernel(const TRUSTTab<_TYPE_,_SIZE_>& tableau, TRUSTArray
   auto tableau_view= tableau.template view_ro<2, ExecSpace>();
   auto max_colonne_view= max_colonne.template view_rw<1, ExecSpace>();
 
+  //Host counterpart of max_colonne used because we can't do a reduction in a device view
+  //reduction in a scalar (here max_colonne(j)) is always on the host it seems
+  auto max_colonne_view_host= max_colonne.template view_rw<1, Kokkos::DefaultHostExecutionSpace>();
+
   const _SIZE_ nblocs = blocs.size_array() >> 1;
   for (_SIZE_ ibloc = 0; ibloc < nblocs; ibloc++)
     {
       const _SIZE_ begin_bloc = blocs[ibloc], end_bloc = blocs[ibloc+1];
       if (begin_bloc<end_bloc) // very important: empty bloc at the end would erase max_colonne
         {
-          Kokkos::RangePolicy<ExecSpace> policy(0, lsize);
-          Kokkos::parallel_for(start_gpu_timer(__KERNEL_NAME__),
-                               policy,
-                               KOKKOS_LAMBDA(const int j)
-          {
-            _TYPE_ local_max=0;
-            for (int i = begin_bloc; i < end_bloc ; i++)
+          Kokkos::RangePolicy<ExecSpace> policy(begin_bloc, end_bloc);
+
+          for (int j=0; j<lsize; j++) //Outer loop
+            {
+              Kokkos::parallel_reduce(start_gpu_timer(__KERNEL_NAME__), //Inner loop (keep parallelism here for perfs)
+                                      policy,
+                                      KOKKOS_LAMBDA(const int i, _TYPE_& local_max)
               {
                 const _TYPE_ x = Kokkos::fabs(tableau_view(i,j));
                 local_max = Kokkos::fmax(local_max, x);
-              }
-            max_colonne_view(j)=local_max;
-          });
-          bool kernelOnDevice = is_default_exec_space<ExecSpace>;
-          end_gpu_timer(kernelOnDevice, __KERNEL_NAME__);
+              },
+              Kokkos::Max<_TYPE_>(max_colonne_view_host(j))); //Reduce in the host
+
+              bool kernelOnDevice = is_default_exec_space<ExecSpace>;
+              end_gpu_timer(kernelOnDevice, __KERNEL_NAME__);
+            }
         }
+
     }
+  Kokkos::deep_copy(max_colonne_view, max_colonne_view_host); //Deep copy in the device
 }
+
 }
 
 template <typename _TYPE_, typename _SIZE_>
