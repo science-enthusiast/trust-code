@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -1396,7 +1396,7 @@ void Op_Conv_Muscl_New_VEF_Face::mettre_a_jour_pour_periodicite(const DoubleTab&
                   int ligne=facei*nb_comp+dim;
                   int ligneAss=faceiAss*nb_comp+dim;
                   Kokkos::atomic_add(&resu[ligneAss], resu[ligne]);
-                  Kokkos::atomic_assign(&resu[ligne], resu[ligneAss]);
+                  Kokkos::atomic_store(&resu[ligne], resu[ligneAss]);
                 }
             /*
                           if (old_centered)
