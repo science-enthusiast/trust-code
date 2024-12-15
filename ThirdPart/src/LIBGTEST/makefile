@@ -1,6 +1,9 @@
 archive_gtest=$(TRUST_ROOT)/externalpackages/utils/googletest-1.15.2.tar.gz 
+gtest=$(TRUST_ROOT)/lib/src/LIBGTEST/lib64/libgtest.a
 
-all : makefile install.sh $(archive_gtest)
+all:$(gtest)
+
+$(gtest) : makefile install.sh $(archive_gtest)
 	./install.sh $(archive_gtest)
 
 clean:

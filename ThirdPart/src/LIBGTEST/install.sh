@@ -10,6 +10,7 @@ install_dir=$TRUST_GTEST_ROOT
 org=$(pwd)
 
 # Ensure required directories exist
+rm -rf $build_dir
 mkdir -p "$install_dir"
 mkdir -p "$build_dir"
 
@@ -32,7 +33,7 @@ src_dir="$build_root/$src_dir_rel"
 OPTIONS=""
 
 # Run CMake to configure the project
-cmake "$src_dir" $OPTIONS -DCMAKE_INSTALL_PREFIX="$install_dir" -DCMAKE_BUILD_TYPE=Release || exit 1
+cmake "$src_dir" $OPTIONS -DCMAKE_INSTALL_PREFIX="$install_dir" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release || exit 1
 
 # Compile and install
 $TRUST_MAKE || exit 1
