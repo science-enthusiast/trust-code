@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -234,11 +234,7 @@ void Schema_Comm_Vecteurs::exchange()
       else
         {
           // Communication between devices. Use device buffer:
-          char * buffer_base = sdata_.buffer_base_;
-          #pragma omp target data use_device_ptr(buffer_base)
-          {
-            ptr = buffer_base;
-          }
+          ptr = addrOnDevice(sdata_.buffer_base_);
         }
     }
 
