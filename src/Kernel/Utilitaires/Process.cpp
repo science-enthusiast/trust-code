@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -220,17 +220,18 @@ bool Process::mp_and(bool b)
 /*! @brief Routine de sortie de TRUST dans une region Kokkos
  *
  */
+/*
 KOKKOS_FUNCTION
 void Process::Kokkos_exit(const char* str)
 {
 #ifdef _OPENMP_TARGET
-  // ToDo Kokkos: try to exit more properly on device...
-  Kokkos::abort(str);
-  //Kokkos::finalize();
+ // ToDo Kokkos: try to exit more properly on device...
+ Kokkos::abort(str);
+ //Kokkos::finalize();
 #else
-  Process::exit(str);
+ Process::exit(str);
 #endif
-}
+}*/
 
 /*! @brief Routine de sortie de TRUST sur une erreur Sauvegarde la memoire et le hierarchie dans les fichiers "memoire.
  *

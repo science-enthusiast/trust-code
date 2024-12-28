@@ -20,7 +20,9 @@
 #include <TRUSTArray.h>
 #include <TRUSTTab_parts.h>
 
+#ifdef __NVCOMPILER
 #pragma diag_suppress 177
+#endif
 
 TEST(TRUSTArrayKokkos, KokkosAccessorRO) {
     {
@@ -185,6 +187,7 @@ TEST(TRUSTArrayKokkos, FlattenedTabAccessors) {
         EXPECT_FALSE(tab_1D.check_flattened<4>());
 }
 
+#ifdef __NVCOMPILER
 #pragma diag_default 177
-
+#endif
 
