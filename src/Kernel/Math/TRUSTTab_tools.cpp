@@ -73,7 +73,7 @@ void local_max_abs_tab_kernel(const TRUSTTab<_TYPE_,_SIZE_>& tableau, TRUSTArray
               Kokkos::Max<_TYPE_, ExecSpace>(Kokkos::subview(max_colonne_view,j)));
 
               bool kernelOnDevice = is_default_exec_space<ExecSpace>;
-              end_gpu_timer(kernelOnDevice, __KERNEL_NAME__);
+              end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
             }
         }
     }

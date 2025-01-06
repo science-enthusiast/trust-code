@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -280,7 +280,7 @@ void Paroi_scal_hyd_base_VEF::imprimer_nusselt(Sortie& os) const
                   }
               }
           });
-          end_gpu_timer(Objet_U::computeOnDevice, __KERNEL_NAME__);
+          end_gpu_timer(__KERNEL_NAME__);
           // Ecriture
           for (int num_face = ndeb; num_face < nfin; num_face++)
             {

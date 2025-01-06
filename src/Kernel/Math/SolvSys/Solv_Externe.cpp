@@ -182,7 +182,7 @@ void Solv_Externe::Update_lhs_rhs(const DoubleVect& tab_b, DoubleVect& tab_x)
       }
   });
   static constexpr bool kernelOnDevice = !std::is_same<ExecSpace, Kokkos::DefaultHostExecutionSpace>::value;
-  end_gpu_timer(kernelOnDevice, __KERNEL_NAME__);
+  end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
 }
 
 template<typename ExecSpace>
@@ -201,7 +201,7 @@ void Solv_Externe::Update_solution(DoubleVect& tab_x)
       x[i] = lhs[ind];
   });
   static constexpr bool kernelOnDevice = !std::is_same<ExecSpace, Kokkos::DefaultHostExecutionSpace>::value;
-  end_gpu_timer(kernelOnDevice, __KERNEL_NAME__);
+  end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
 }
 
 #ifdef _OPENMP_TARGET
