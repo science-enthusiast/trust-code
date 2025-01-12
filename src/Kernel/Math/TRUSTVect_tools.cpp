@@ -19,7 +19,7 @@
 #include <View_Types.h>
 
 // Ajout d'un flag par appel a end_timer peut etre couteux (creation d'une string)
-#ifdef _OPENMP_TARGET
+#ifdef TRUST_USE_GPU
 static bool timer=true;
 #else
 static bool timer=false;

@@ -224,7 +224,7 @@ bool Process::mp_and(bool b)
 KOKKOS_FUNCTION
 void Process::Kokkos_exit(const char* str)
 {
-#ifdef _OPENMP_TARGET
+#ifdef TRUST_USE_GPU
  // ToDo Kokkos: try to exit more properly on device...
  Kokkos::abort(str);
  //Kokkos::finalize();
@@ -410,7 +410,7 @@ void Process::imprimer_ram_totale(int all_process)
         double max_memoire=Process::mp_max(memoire);
         double total_memoire=Process::mp_sum(memoire);
         Cout << (int)(total_memoire/Mo) << " MBytes of RAM taken by the calculation (max on a rank: "<<(int)(max_memoire/Mo)<<" MB)." << finl;
-#ifdef _OPENMP_TARGET
+#ifdef TRUST_USE_GPU
         int Go = 1024 * Mo;
         double allocated = mp_max((double)DeviceMemory::allocatedBytesOnDevice());
         size_t total = DeviceMemory::deviceMemGetInfo(1);
