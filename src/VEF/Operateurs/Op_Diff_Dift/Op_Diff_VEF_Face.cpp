@@ -318,37 +318,76 @@ void Op_Diff_VEF_Face::ajouter_cas_vectoriel(const DoubleTab& inconnue,
   DoubleTabView resu_v = resu.view_rw();
   DoubleTabView tab_flux_bords_v = tab_flux_bords.view_rw();
 
-//  auto kern_ajouter = KOKKOS_LAMBDA(int
-//                                    num_face)
-//  {
-//    for (int k = 0; k < 2; k++)
-//      {
-//        int elem = face_voisins_v(num_face, k);
-//        if (elem >= 0)
-//          {
-//            int ori = 1 - 2 * k;
-//            double nu_elem = nu_v(elem, 0);
-//            for (int i = 0; i < nb_comp; i++)
-//              for (int j = 0; j < nb_comp; j++)
-//                {
-//                  double grad_ij = grad_v(elem, i, j);
-//                  double grad_ji = grad_v(elem, j, i);
-//                  double fn = face_normales_v(num_face, j);
-//                  double flux = ori * fn * (nu_elem * grad_ij  /* + Re(elem, i, j) */ );
-//                  Kokkos::atomic_sub(&resu_v(num_face, i), flux);
-//
-//                  if (num_face < nb_faces_bord)
-//                    {
-//                      double flux_bord = ori * fn * (nu_elem * (grad_ij + grad_ji));
-//                      Kokkos::atomic_sub(&tab_flux_bords_v(num_face, i), flux_bord);
-//                    }
-//                }
-//          }
-//      }
-//  };
-//
-//  Kokkos::parallel_for(start_gpu_timer(__KERNEL_NAME__), nb_faces, kern_ajouter);
-//  end_gpu_timer(__KERNEL_NAME__);
+// #define BASIC_PARALLEL
+// #define MDRANGE_PARALLEL
+// #define SLOW_HP
+// #define MDHP_NO_SCRATCH
+
+#if defined(BASIC_PARALLEL)
+  auto kern_ajouter = KOKKOS_LAMBDA(int
+                                    num_face)
+  {
+    for (int k = 0; k < 2; k++)
+      {
+        int elem = face_voisins_v(num_face, k);
+        if (elem >= 0)
+          {
+            int ori = 1 - 2 * k;
+            double nu_elem = nu_v(elem, 0);
+            for (int i = 0; i < nb_comp; i++)
+              for (int j = 0; j < nb_comp; j++)
+                {
+                  double grad_ij = grad_v(elem, i, j);
+                  double grad_ji = grad_v(elem, j, i);
+                  double fn = face_normales_v(num_face, j);
+                  double flux = ori * fn * (nu_elem * grad_ij  /* + Re(elem, i, j) */ );
+                  Kokkos::atomic_sub(&resu_v(num_face, i), flux);
+
+                  if (num_face < nb_faces_bord)
+                    {
+                      double flux_bord = ori * fn * (nu_elem * (grad_ij + grad_ji));
+                      Kokkos::atomic_sub(&tab_flux_bords_v(num_face, i), flux_bord);
+                    }
+                }
+          }
+      }
+  };
+
+  Kokkos::parallel_for(start_gpu_timer(__KERNEL_NAME__), nb_faces, kern_ajouter);
+  end_gpu_timer(__KERNEL_NAME__);
+
+#elif defined(MDRANGE_PARALLEL)
+
+  auto kern_ajouter = KOKKOS_LAMBDA(int
+                                    num_face, int k)
+  {
+    int elem = face_voisins_v(num_face, k);
+    if (elem >= 0)
+      {
+        int ori = 1 - 2 * k;
+        double nu_elem = nu_v(elem, 0);
+        for (int i = 0; i < nb_comp; i++)
+          for (int j = 0; j < nb_comp; j++)
+            {
+              double grad_ij = grad_v(elem, i, j);
+              double grad_ji = grad_v(elem, j, i);
+              double fn = face_normales_v(num_face, j);
+              double flux = ori * fn * (nu_elem * grad_ij  /* + Re(elem, i, j) */ );
+              Kokkos::atomic_sub(&resu_v(num_face, i), flux);
+
+              if (num_face < nb_faces_bord)
+                {
+                  double flux_bord = ori * fn * (nu_elem * (grad_ij + grad_ji));
+                  Kokkos::atomic_sub(&tab_flux_bords_v(num_face, i), flux_bord);
+                }
+            }
+      }
+  };
+
+  Kokkos::parallel_for(start_gpu_timer(__KERNEL_NAME__), Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {nb_faces, 2}), kern_ajouter);
+  end_gpu_timer(__KERNEL_NAME__);
+
+#elif defined(SLOW_HP)
 
   typedef typename Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::member_type member_type;
 
@@ -387,6 +426,101 @@ void Op_Diff_VEF_Face::ajouter_cas_vectoriel(const DoubleTab& inconnue,
   });
 
   end_gpu_timer(__KERNEL_NAME__);
+
+#elif defined(MDHP_NO_SCRATCH)
+
+  typedef typename Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::member_type member_type;
+
+  parallel_for(start_gpu_timer(__KERNEL_NAME__), Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>(nb_faces, Kokkos::AUTO),
+               KOKKOS_LAMBDA(const member_type &teamMember)
+  {
+    int num_face = teamMember.league_rank();
+
+    Kokkos::parallel_for(Kokkos::TeamThreadMDRange<Kokkos::Rank<3>, member_type>(teamMember, 2, nb_comp, nb_comp),
+                         [=] (int k, int i, int j)
+    {
+      int elem = face_voisins_v(num_face, k);
+      if (elem >= 0)
+        {
+          int ori = 1 - 2 * k;
+          double nu_elem = nu_v(elem, 0);
+          double grad_ij = grad_v(elem, i, j);
+          double grad_ji = grad_v(elem, j, i);
+          double fn = face_normales_v(num_face, j);
+          double flux = ori * fn * (nu_elem * grad_ij  /* + Re(elem, i, j) */ );
+          Kokkos::atomic_sub(&resu_v(num_face, i), flux);
+
+          if (num_face < nb_faces_bord)
+            {
+              double flux_bord = ori * fn * (nu_elem * (grad_ij + grad_ji));
+              Kokkos::atomic_sub(&tab_flux_bords_v(num_face, i), flux_bord);
+            }
+        }
+    });
+  });
+
+  end_gpu_timer(__KERNEL_NAME__);
+
+#else
+
+  using ExecutionSpace = Kokkos::DefaultExecutionSpace;
+
+  Kokkos::TeamPolicy<ExecutionSpace> policy(nb_faces, Kokkos::AUTO);
+
+  typedef typename Kokkos::TeamPolicy<ExecutionSpace>::member_type member_type;
+
+  using ScratchPadView = Kokkos::View<double *, ExecutionSpace::scratch_memory_space>;
+
+  std::size_t scratch_num_elems = 18;
+
+  std::size_t scratch_num_bytes = ScratchPadView::shmem_size(scratch_num_elems*sizeof(double));
+
+  int level = 0;
+
+  Kokkos::parallel_for(start_gpu_timer(__KERNEL_NAME__), policy.set_scratch_size(level, Kokkos::PerTeam(scratch_num_bytes)),
+                       KOKKOS_LAMBDA(const member_type &teamMember)
+  {
+    int num_face = teamMember.league_rank();
+
+    ScratchPadView scratch(teamMember.team_scratch(level), scratch_num_elems);
+
+    Kokkos::parallel_for(Kokkos::TeamVectorRange(teamMember, scratch_num_elems), [=] (int s)
+    {
+      int k = s / 9;
+      int i = s / 3;
+      int j = s - (i * 3);
+      int elem = face_voisins_v(num_face, k);
+      scratch(s) = grad_v(elem, i, j);
+    });
+
+    Kokkos::parallel_for(Kokkos::TeamThreadMDRange<Kokkos::Rank<3>, member_type>(teamMember, 2, nb_comp, nb_comp),
+                         [=] (int k, int i, int j)
+    {
+      int elem = face_voisins_v(num_face, k);
+      if (elem >= 0)
+        {
+          int ori = 1 - 2 * k;
+          int s_1 = k * 9 + i * 3 + j;
+          int s_2 = k * 9 + j * 3 + i;
+          double nu_elem = nu_v(elem, 0);
+          double grad_ij = scratch(s_1);
+          double grad_ji = scratch(s_2);
+          double fn = face_normales_v(num_face, j);
+          double flux = ori * fn * (nu_elem * grad_ij  /* + Re(elem, i, j) */ );
+          Kokkos::atomic_sub(&resu_v(num_face, i), flux);
+
+          if (num_face < nb_faces_bord)
+            {
+              double flux_bord = ori * fn * (nu_elem * (grad_ij + grad_ji));
+              Kokkos::atomic_sub(&tab_flux_bords_v(num_face, i), flux_bord);
+            }
+        }
+    });
+  });
+
+  end_gpu_timer(__KERNEL_NAME__);
+
+#endif
 
   // Update flux_bords on symmetry:
   const int nb_bords=domaine_VEF.nb_front_Cl();
